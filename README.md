@@ -21,9 +21,6 @@ _This project is an extension of [Omarchy Mac](https://github.com/malik-na/omarc
 - Fedora Atomic Desktops: https://fedoraproject.org/atomic-desktops/
 - secureblue: https://secureblue.dev/
 - Omarchy: https://omarchy.org/
-- Omadora Discord: https://discord.gg/jdqjcPxxJe
-- External monitor discussion: https://github.com/malik-na/omadora/discussions/73
-- Support the project: https://buymeacoffee.com/malik2015no
 
 ---
 
