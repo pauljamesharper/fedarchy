@@ -1,10 +1,8 @@
 # Fedarchy — Quattro
 
-Omarchy (DHH's Hyprland desktop) ported to Fedora. This fork's primary target is **secureblue**
-— hardened, immutable Fedora Atomic (`rpm-ostree`, no `sudo`) — and it should also work on plain
-**Fedora Sway Atomic** / Silverblue / Kinoite. It grew out of an earlier fork built for **Fedora
-Asahi Remix (aarch64)** on Apple Silicon Macs, which is still supported as a separate install path
-below.
+Omarchy (DHH's Hyprland desktop) ported to Fedora. Built and used on **secureblue** — hardened,
+immutable Fedora Atomic built on Fedora Sway Atomic (`rpm-ostree`, no `sudo`, only `run0`) — and it
+should also work on plain **Fedora Sway Atomic** / Silverblue / Kinoite.
 
 > ### 🆕 This is Omarchy "Quattro"
 > This branch tracks **Omarchy quattro** — a major rework of the desktop. The bar, launcher,
@@ -21,7 +19,6 @@ _This project is an extension of [Omarchy Mac](https://github.com/malik-na/omarc
 
 ## Quick links
 
-- Fedora Asahi device support: https://asahilinux.org/fedora/#device-support
 - Fedora Atomic Desktops: https://fedoraproject.org/atomic-desktops/
 - secureblue: https://secureblue.dev/
 - Omarchy: https://omarchy.org/
@@ -92,101 +89,6 @@ ever picks the wrong tool, `install/helpers/distro-secureblue.sh` is where that 
 
 ---
 
-## Fedora Asahi Remix (Apple Silicon Mac)
-
-The original target of this fork: Fedora Asahi Remix on M1/M2 Macs, using the mutable `install.sh`
-entry point (real `sudo`, real `dnf`).
-
-Requirements:
-
-- Apple Silicon Mac (M1/M2 family)
-- **Fedora Asahi Remix 44 Minimal (aarch64) or newer**
-- A regular user with sudo access
-- Internet connectivity
-- `git` installed
-
-Unsupported targets for this path:
-
-- Arch/Asahi Alarm runtime paths
-- Non-Asahi Fedora installs
-- **Fedora Asahi Remix 43 and older** - see below
-
-Checklist:
-
-- [ ] Backup completed
-- [ ] Fedora Asahi device compatibility checked
-- [ ] Running Fedora Asahi Remix 44 or newer (`cat /etc/os-release`)
-- [ ] Fedora Asahi first-boot TTY setup completed (language, hostname, time, root password, user, wheel)
-- [ ] Internet connected
-- [ ] Sudo user ready
-
----
-
-**Important:** Fedora Asahi Minimal first boot lands in a TTY setup flow. You must complete all prompts there before running Fedarchy installer steps.
-
----
-
-### Prepare Fedora Asahi Minimal (required)
-
-Fedora Asahi Minimal always starts with a TTY setup flow. Complete all prompts there before continuing:
-
-- language
-- hostname
-- date/time
-- root password
-- regular user creation
-- wheel/sudo access
-
-Do not continue to Omarchy install until all first-boot setup actions are complete.
-
-Optional: improve TTY readability
-
-```bash
-sudo dnf install -y terminus-fonts-console || sudo dnf install -y terminus-fonts
-sudo setfont ter-v22n
-```
-
----
-
-### Connect to Wi-Fi before installation
-
-Use one of these methods from your Fedora Asahi session before running the installer.
-
-Use `nmcli` (NetworkManager CLI):
-
-```bash
-# Check network devices
-nmcli device status
-
-# Connect to a network
-nmcli device wifi connect "SSID_NAME" password "PASSWORD"
-```
-
-The connection you make here carries over into the installed system: the installer leaves
-NetworkManager on its default `wpa_supplicant` backend and does not touch saved profiles.
-
-Fedora Asahi Minimal normally includes the required first-boot setup prompts; use these commands only to ensure networking is ready before install.
-
-
-### Install Fedarchy on Fedora Asahi
-
-As your regular sudo user;
-
-
-Clone and run the installer:
-
-```bash
-sudo dnf update
-git clone https://github.com/pauljamesharper/fedarchy.git ~/.local/share/omarchy
-cd ~/.local/share/omarchy
-bash install.sh
-```
-
-`omarchy update` pulls from wherever you cloned, so a fork installs and updates from that fork
-without any extra configuration.
-
----
-
 ## Post-install tasks
 
 - On secureblue/atomic Fedora, make sure you've completed the reboot-and-rerun cycle described
@@ -199,11 +101,11 @@ without any extra configuration.
 
 ### Installer refuses to continue
 
-Two entry points, two targets: `install.sh` supports **Fedora Asahi Remix on aarch64 only**;
-`install-atomic.sh` supports **secureblue or plain atomic Fedora on x86_64**. Verify you're using
-the right one for your hardware/distro and rerun.
+`install-atomic.sh` requires secureblue or plain atomic Fedora (Silverblue/Kinoite/Sway Atomic) on
+x86_64. Verify distro/architecture and rerun.
 
-On **Fedora Asahi Remix 43 or older** the installer, `omarchy-update` and `omarchy-migrate` all stop on purpose and print the upgrade steps. Upgrade Fedora to 44 first - see [Already on Fedora Asahi Remix 43?](#already-on-fedora-asahi-remix-43) above.
+On a Fedora release older than 44, the installer, `omarchy-update`, and `omarchy-migrate` all stop
+on purpose and print the upgrade steps. Upgrade Fedora to 44 first, then re-run.
 
 ### Session launches but keybinds fail
 
@@ -273,16 +175,14 @@ Need help or want to share your setup?
 
 ## External resources
 
-- Fedora Asahi device support: https://asahilinux.org/fedora/#device-support
-- Asahi Linux project: https://asahilinux.org/
 - External monitor discussion: https://github.com/malik-na/omarchy-mac-fedora/discussions/73
 
 ---
 
 ## Acknowledgements
 
-Thanks to the Asahi Linux community for making Linux  by possible on Macs, to DHH for Omarchy, to
-the Omadora developer for this fork, and to the Fedora project for the base this all runs on.
+Thanks to DHH for Omarchy, to the Omadora developer for this fork, and to the Fedora project for
+the base this all runs on.
 
 If this project helped you, please star the repository and share feedback on X by tagging [@tiredkebab](https://x.com/tiredkebab).
 
