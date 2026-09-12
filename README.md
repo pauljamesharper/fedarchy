@@ -164,21 +164,6 @@ review of the change was "vibe coded" — accepted on the strength of the explan
 successful test run, not independently verified line by line — so treat this section as
 unverified until it's been confirmed on a second secureblue machine.
 
-## Support
-
-Need help or want to share your setup?
-
-- Discord: https://discord.gg/jdqjcPxxJe
-- Support the project: [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/malik2015no)
-
----
-
-## External resources
-
-- External monitor discussion: https://github.com/malik-na/omarchy-mac-fedora/discussions/73
-
----
-
 ## Acknowledgements
 
 Thanks to DHH for Omarchy, to the Omadora developer for this fork, and to the Fedora project for
