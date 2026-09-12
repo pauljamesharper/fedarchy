@@ -79,23 +79,23 @@ reset_home() {
 
 # ---------------------------------------------------------------- tmux config
 
-# The shipped config with the alert block put back is exactly what an installed
-# machine has, so cleaning it has to land on the shipped config byte for byte.
+# The shipped config with the alert block appended is exactly what an
+# installed machine has (the migration drops the block wherever it sits, not
+# just at a particular line), so cleaning it has to land on the shipped
+# config byte for byte.
 reset_home
-awk '
-  /^# Status bar$/ {
-    print "# Alerts"
-    print "set-hook -g alert-bell '\''run-shell -b \"omarchy-shell -q omarchy.indicators refresh\"'\''"
-    print "set-hook -g alert-activity '\''run-shell -b \"omarchy-shell -q omarchy.indicators refresh\"'\''"
-    print "set-hook -g alert-silence '\''run-shell -b \"omarchy-shell -q omarchy.indicators refresh\"'\''"
-    print "set-hook -g after-select-window '\''run-shell -b \"omarchy-tmux-alert track #{window_id} #{window_activity}\"'\''"
-    print "set-hook -g client-session-changed '\''run-shell -b \"omarchy-tmux-alert track #{window_id} #{window_activity}\"'\''"
-    print "set-hook -g client-focus-out[100] '\''run-shell -b \"omarchy-tmux-alert track #{window_id} #{window_activity}\"'\''"
-    print "set-hook -g client-focus-in[100] '\''run-shell -b \"omarchy-tmux-alert track #{window_id} #{window_activity}\"'\''"
-    print ""
-  }
-  { print }
-' "$ROOT/config/tmux/tmux.conf" >"$tmux_config"
+cp "$ROOT/config/tmux/tmux.conf" "$tmux_config"
+cat >>"$tmux_config" <<'EOF'
+
+# Alerts
+set-hook -g alert-bell 'run-shell -b "omarchy-shell -q omarchy.indicators refresh"'
+set-hook -g alert-activity 'run-shell -b "omarchy-shell -q omarchy.indicators refresh"'
+set-hook -g alert-silence 'run-shell -b "omarchy-shell -q omarchy.indicators refresh"'
+set-hook -g after-select-window 'run-shell -b "omarchy-tmux-alert track #{window_id} #{window_activity}"'
+set-hook -g client-session-changed 'run-shell -b "omarchy-tmux-alert track #{window_id} #{window_activity}"'
+set-hook -g client-focus-out[100] 'run-shell -b "omarchy-tmux-alert track #{window_id} #{window_activity}"'
+set-hook -g client-focus-in[100] 'run-shell -b "omarchy-tmux-alert track #{window_id} #{window_activity}"'
+EOF
 
 run_migration
 

@@ -10,9 +10,9 @@ You start a new terminal using `Super + Return`. (This binding will automaticall
 
 Tmux provides a consistent, programmable interface for panes, windows (aka tabs), and resumable sessions regardless of your terminal. It even works on remote hosts, so when you're SSH'ing into a server, you can use the same approach.
 
-You start a new Tmux session in a fresh terminal using `Super + Alt + Return`, and because Tmux is a persistent process, you can resume your session even if you close that terminal. Just hit `Ctrl + Space` (called the prefix key) then `s` to see all your active sessions.
+You start a new Tmux session in a fresh terminal using `Super + Alt + Return`, and because Tmux is a persistent process, you can resume your session even if you close that terminal. Just hit `Ctrl + B` (called the prefix key) then `s` to see all your active sessions.
 
-Omarchy ships with an ergonomically-optimized Tmux configuration, which has a lot of keybindings to learn, so keep [the cheatsheet handy](07-hotkeys.md#tmux).
+Omarchy runs Tmux with its stock keybindings - no custom configuration to learn. See [Tmux layout functions](07-hotkeys.md#tmux-layout-functions) for the productivity shortcuts Omarchy adds on top.
 
 ## Tmux layout functions
 
