@@ -1,6 +1,6 @@
-# Omadora — Quattro
+# Fedarchy — Quattro
 
-A concise, beginner-friendly guide to install Omadora on **Fedora Asahi Remix (aarch64)** for Apple Silicon Macs M1/M2
+A concise, beginner-friendly guide to install Fedarchy on **Fedora Asahi Remix (aarch64)** for Apple Silicon Macs M1/M2
 
 > ### 🆕 This is Omarchy "Quattro"
 > This branch tracks **Omarchy quattro** — a major rework of the desktop. The bar, launcher,
@@ -52,7 +52,7 @@ Checklist:
 
 ---
 
-**Important:** Fedora Asahi Minimal first boot lands in a TTY setup flow. You must complete all prompts there before running Omadora installer steps.
+**Important:** Fedora Asahi Minimal first boot lands in a TTY setup flow. You must complete all prompts there before running Fedarchy installer steps.
 
 ---
 
@@ -98,7 +98,7 @@ NetworkManager on its default `wpa_supplicant` backend and does not touch saved 
 Fedora Asahi Minimal normally includes the required first-boot setup prompts; use these commands only to ensure networking is ready before install.
 
 
-### Install Omadora
+### Install Fedarchy
 
 As your regular sudo user;
 
@@ -107,7 +107,7 @@ Clone and run the installer:
 
 ```bash
 sudo dnf update
-git clone https://github.com/malik-na/omadora.git ~/.local/share/omarchy
+git clone https://github.com/pauljamesharper/fedarchy.git ~/.local/share/omarchy
 cd ~/.local/share/omarchy
 bash install.sh
 ```
