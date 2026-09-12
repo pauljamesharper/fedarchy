@@ -27,8 +27,51 @@
 
 OMARCHY_INSTALL="${OMARCHY_INSTALL:-$HOME/.local/share/omarchy/install}"
 source "$OMARCHY_INSTALL/helpers/distro.sh"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
 
 is_fedora || exit 0
+
+# secureblue: same stable/git selection and swap logic as below, but every
+# install/swap is an rpm-ostree layer that only takes effect on the *next*
+# boot - `rpm -q` here still reflects the currently booted deployment, not
+# a pending one, so re-running this script before rebooting is a safe
+# no-op (the pending change is already queued) and re-running it after
+# rebooting picks up wherever the swap left off. `rpm-ostree install
+# X --uninstall Y` is the atomic-swap equivalent of `dnf swap Y X` - one
+# transaction, resolved fully before anything is written, same safety
+# property as dnf's swap.
+if is_secureblue; then
+  if rpm -q hyprland &>/dev/null; then
+    rpm -q hyprland-uwsm &>/dev/null || rpm-ostree install --idempotent -y hyprland-uwsm
+    echo "[hyprland] stable hyprland installed"
+    exit 0
+  fi
+
+  if rpm -q hyprland-git &>/dev/null; then
+    echo "[hyprland] on hyprland-git - checking whether stable has been rebuilt"
+    if rpm-ostree install --idempotent -y hyprland --uninstall hyprland-git >/dev/null 2>&1; then
+      echo "[hyprland] stable hyprland is available again - queued swap off hyprland-git (takes effect next reboot)"
+      if rpm -q hyprland-git-uwsm &>/dev/null; then
+        rpm-ostree install --idempotent -y hyprland-uwsm --uninstall hyprland-git-uwsm ||
+          echo "[hyprland] WARNING: hyprland-git-uwsm still owns the uwsm session file"
+      else
+        rpm -q hyprland-uwsm &>/dev/null || rpm-ostree install --idempotent -y hyprland-uwsm
+      fi
+    else
+      echo "[hyprland] stable hyprland still does not resolve - staying on hyprland-git"
+    fi
+    exit 0
+  fi
+
+  echo "[hyprland] queuing the Hyprland core (takes effect next reboot)"
+  if rpm-ostree install --idempotent -y hyprland hyprland-uwsm; then
+    exit 0
+  fi
+
+  echo "[hyprland] stable hyprland does not resolve - falling back to hyprland-git"
+  rpm-ostree install --idempotent -y hyprland-git hyprland-git-uwsm
+  exit 0
+fi
 
 if rpm -q hyprland &>/dev/null; then
   # Repair the case where the session subpackage was skipped as a weak dependency.

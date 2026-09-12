@@ -1,0 +1,47 @@
+# secureblue optional/build package list for Omarchy quattro
+# Format: one package name per line - system tier (rpm-ostree) only. Unlike
+# omarchy-base.packages.secureblue this file carries no gui:/cli: entries;
+# everything here is either a runtime shared library the desktop session
+# itself links against, or a build-toolchain package other host-level steps
+# actually need present (see below) - none of it belongs sandboxed away.
+#
+# @development-tools (the dnf group) has no rpm-ostree @group syntax to
+# resolve it against, so it's spelled out below as an explicit package list
+# (a hand-picked approximation of Fedora's "Development Tools" comps group -
+# dnf itself can't be queried for the exact current membership here without
+# a writable /etc/yum.repos.d, see the secureblue branch of
+# install/helpers/fedora-copr.sh for the same access issue).
+#
+# This intentionally does NOT live in a toolbox instead: fedora-manual.sh's
+# starship/eza cargo fallbacks (`cargo install --locked ...`) compile from
+# source and shell out to a C compiler as part of that build - if gcc only
+# existed inside a toolbox, those host-level cargo builds would have no
+# compiler to find. One location for the toolchain, not two.
+gcc
+gcc-c++
+make
+automake
+autoconf
+libtool
+rpm-build
+redhat-rpm-config
+pkgconf-pkg-config
+patch
+diffutils
+findutils
+gettext
+
+# Everything else here is the same list as omarchy-other.packages.fedora;
+# see that file for the fuller per-package commentary on what's omitted and
+# why.
+autoconf-archive
+btrfs-progs
+egl-wayland
+pipewire-gstreamer
+gtk4-layer-shell
+pulseaudio-libs
+wpa_supplicant
+tiny-dfr
+glycin-loaders
+wget2-wget
+zram-generator

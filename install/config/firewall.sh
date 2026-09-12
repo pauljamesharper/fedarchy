@@ -30,7 +30,10 @@ firewall_permanent --add-port=53317/udp
 firewall_permanent --add-port=53317/tcp
 
 # Let Docker containers reach the host's DNS resolver on the docker0 bridge.
-firewall_permanent --add-rich-rule='rule family="ipv4" source address="172.16.0.0/12" destination address="172.17.0.1" port protocol="udp" port="53" accept'
+# Skipped on secureblue: this user runs podman instead, Docker isn't
+# installed there at all (see omarchy-base.packages.secureblue).
+source "${OMARCHY_INSTALL:-$HOME/.local/share/omarchy/install}/helpers/distro-secureblue.sh"
+is_secureblue || firewall_permanent --add-rich-rule='rule family="ipv4" source address="172.16.0.0/12" destination address="172.17.0.1" port protocol="udp" port="53" accept'
 
 # Apply the permanent rules now if firewalld is running (live install). Otherwise they take effect
 # when the installed system boots and firewalld starts.

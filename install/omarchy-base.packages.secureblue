@@ -1,0 +1,240 @@
+# secureblue package list for Omarchy quattro
+# Format: one entry per line, `<tier>:<name>` or bare `<name>` (defaults to
+# system tier). Tiers:
+#   system  - rpm-ostree layer (run0). Default when no prefix is given.
+#             Right for anything that can't be sandboxed: compositor,
+#             portals, PAM/greeter/systemd-service-backed daemons, kernel
+#             modules, fonts (needed before any session/sandbox exists).
+#   gui:<flatpak-app-id>  - flatpak --user install. <name> is the Flatpak
+#             application ID, not the RPM name (they usually differ).
+#   cli:<brew-formula>    - brew install. <name> is the linuxbrew formula
+#             name (usually, not always, the same as the RPM name).
+#
+# This is a straight per-package retier of omarchy-base.packages.fedora, not
+# an independent list - see that file for the fuller upstream commentary on
+# why each package is here at all. Only the packages with an unambiguous,
+# well-known Flatpak ID or brew formula were moved off the system tier;
+# everything else defaults to system (rpm-ostree) for v1 - correct, if not
+# maximally optimal. Revisit case-by-case later; nothing here is final.
+#
+# The Hyprland stack itself, portals, and the COPR it comes from are handled
+# the same as Fedora (see install/helpers/fedora-copr.sh's secureblue
+# branch) - listed here as system tier like everything else that resolves
+# from a normal repo, dnf-copr-enabled or not.
+
+# Desktop - Hyprland stack (lionheartp COPR)
+hyprland-qt-support
+hyprland-guiutils
+hyprsunset
+hyprpicker
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+uwsm
+
+# Desktop - Quickshell shell
+quickshell
+
+# Desktop - capture
+gpu-screen-recorder
+wf-recorder
+grim
+slurp
+
+# Desktop - misc
+wl-clipboard
+wtype
+xdg-user-dirs
+qt5-qtwayland
+qt6-qtwayland
+mesa-vulkan-drivers
+yaru-icon-theme
+yaru-gtk3-theme
+yaru-gtk4-theme
+yaru-gtksourceview-theme
+
+# GUI apps - flatpak (clear, well-known app IDs). Nautilus itself NOT
+# listed: it's already natively layered on this image's base
+# (LayeredPackages already includes `nautilus`) - a flatpak copy on top
+# would be a real duplicate (two file managers fighting over the same
+# D-Bus/desktop-file identity), which is very likely why installing it as
+# a flatpak failed outright on the first real run of this installer.
+gui:org.gnome.NautilusPreviewer
+gui:org.gnome.Evince
+gui:org.kde.kdenlive
+gui:com.obsproject.Studio
+gui:com.github.PintaProject.Pinta
+gui:com.github.xournalpp.xournalpp
+gui:org.libreoffice.LibreOffice
+gui:org.gnome.Calculator
+gui:org.gnome.DiskUtility
+# Chromium's flatpak sandboxing complicates the native-messaging-host
+# registration install/user/chromium.sh does for bundled extensions -
+# revisit that script before relying on this; kept system-tier for now so
+# the rest of the desktop isn't blocked on that rework.
+chromium
+
+# Terminals - kept system-tier: deep Wayland/PTY integration, not a typical
+# sandboxed-GUI-app or standalone-CLI-tool shape.
+xdg-terminal-exec
+alacritty
+foot
+
+# Shell & CLI tools - brew (clear, well-known formula names).
+#
+# starship, eza, fzf, ripgrep, bat, fd, zoxide, jq, tldr, neovim (below),
+# and yt-dlp are deliberately NOT listed here even though Omarchy wants all
+# of them: they're already in ~/dotfiles/Brewfile, this user's own
+# canonical "command-line programs come from Homebrew" list, which
+# packaging/base.sh's secureblue branch runs via `brew bundle` before
+# processing this file. Listing them again here would just be a second,
+# easy-to-drift-out-of-sync copy of the same nine formulas - one location,
+# not two. Only the tools Omarchy needs that AREN'T already in that
+# Brewfile are listed below.
+cli:btop
+# fastfetch and tmux NOT listed here: both are already natively layered on
+# this image's base (LayeredPackages already includes both) - listing them
+# as cli: too would install a second, brew-sourced copy on top of the
+# already-present native one. Confirmed this actually happened on the
+# first real run before this fix: `brew list --formula` showed both
+# alongside their native package - if you're reading this after that run,
+# `brew uninstall fastfetch tmux` cleans up the redundant brew copies.
+cli:gum
+cli:dua-cli
+# omarchy-menu-keybindings resolves XKB keycodes with xkbcli
+# (libxkbcommon-utils) and decodes the Hyprland bind list with Perl's
+# JSON::PP - small system libs, not worth a brew detour.
+libxkbcommon-utils
+perl-JSON-PP
+less
+man-db
+plocate
+socat
+inotify-tools
+inxi
+whois
+unzip
+util-linux-script
+
+# Development - brew where it's a pure userspace CLI. neovim not listed:
+# already in ~/dotfiles/Brewfile (see the note above).
+cli:gh
+cli:tree-sitter-cli
+cli:ruby
+git
+cargo
+rust
+clang
+llvm
+luarocks
+compat-lua
+compat-lua-libs
+libyaml
+python3-gobject
+python3-poetry-core
+libpq
+mariadb-connector-c
+java-latest-openjdk
+dotnet-runtime-9.0
+
+# Containers - Docker deliberately NOT installed here: this user runs
+# podman instead (already part of the secureblue base image). See
+# install/config/docker.sh, enable-services.sh, firewall.sh, and
+# etc-files.sh, which all skip their Docker-specific steps on secureblue
+# for the same reason.
+
+# Media & Apps
+imv
+cli:chafa
+mpv
+mpv-mpris
+ffmpegthumbnailer
+ImageMagick
+tesseract
+tesseract-langpack-eng
+gvfs-mtp
+gvfs-nfs
+gvfs-smb
+udiskie
+
+# System - audio/bluetooth/print/network/power daemons, all systemd-service
+# or kernel-module backed. Stay system tier.
+brightnessctl
+pamixer
+alsa-utils
+wireplumber
+pulseaudio-utils
+pipewire-pulseaudio
+bluez
+bluez-tools
+plymouth
+cups
+cups-browsed
+cups-filters
+cups-pdf
+system-config-printer
+nss-mdns
+avahi
+bolt
+# power-profiles-daemon NOT listed: this image already ships tuned-ppd,
+# which provides the same ppd-service D-Bus interface and hard-conflicts
+# with power-profiles-daemon (confirmed: rpm-ostree refused the transaction
+# outright - "package tuned-ppd ... conflicts with ppd-service provided by
+# power-profiles-daemon"). tuned-ppd already covers what this was for.
+firewalld
+python3-pip
+flatpak
+NetworkManager
+NetworkManager-tui
+nm-connection-editor
+# snapper/btrfs-assistant/python3-dnf-plugin-snapper deliberately dropped:
+# OSTree has its own atomic rollback (rpm-ostree rollback), a second
+# snapshot scheme on top would be redundant and would fight it. See
+# install/config/btrfs-snapper.sh, dropped from the secureblue install path
+# entirely (install/config/config-secureblue.sh does not call it).
+dosfstools
+exfatprogs
+wireless-regdb
+libsecret
+gnome-keyring
+
+# Display Manager - SDDM is already the active display manager in the base
+# secureblue image; this line is a no-op in practice (rpm -q already true)
+# but stays for documentation/idempotency parity with the Fedora list.
+sddm
+
+# Fonts - system tier: needed before any session/flatpak sandbox exists.
+google-noto-fonts-common
+google-noto-sans-fonts
+google-noto-sans-cjk-fonts
+google-noto-emoji-fonts
+google-noto-color-emoji-fonts
+jetbrains-mono-fonts
+cascadia-mono-nf-fonts
+fontawesome4-fonts
+fontawesome-fonts-web
+terminus-fonts-console
+
+# Input Methods
+fcitx5
+fcitx5-gtk
+fcitx5-qt5
+fcitx5-qt6
+
+# First-party tool runtime deps (see omarchy-base.packages.fedora for why -
+# same reasoning applies unchanged here)
+webkit2gtk4.1
+gtk3
+gtk-layer-shell
+gstreamer1
+gstreamer1-plugins-good
+ffmpeg-free
+alsa-lib
+qt6-qtbase
+qt6-qtdeclarative
+qt6-qtmultimedia
+hicolor-icon-theme
+libadwaita
+libepoxy
+fontconfig
+gtk4
+xdg-desktop-portal

@@ -1,3 +1,25 @@
+source "${OMARCHY_INSTALL:-$HOME/.local/share/omarchy/install}/helpers/distro-secureblue.sh"
+
+if is_secureblue; then
+  # secureblue targets are plain x86_64 laptops, not Apple Silicon - this is
+  # an explicit allowlist rather than the "call everything, let each leaf
+  # self-gate" convention below, because one leaf (network.sh) does
+  # *unconditional* NetworkManager/iwd rework for Asahi-specific quirks that
+  # do not apply here and was not safe to trust to self-gate. Everything
+  # kept below is still DMI/CPU/kernel-module gated inside its own script,
+  # same as always - this list just skips scripts that can only ever be
+  # dead weight on this hardware family instead of calling them to find out.
+  run_logged "$OMARCHY_INSTALL/hardware/input-group.sh"
+  run_logged "$OMARCHY_INSTALL/hardware/bluetooth.sh"
+  run_logged "$OMARCHY_INSTALL/hardware/vulkan.sh"
+  run_logged "$OMARCHY_INSTALL/hardware/intel/lpmd.sh"
+  run_logged "$OMARCHY_INSTALL/hardware/intel/thermald.sh"
+  run_logged "$OMARCHY_INSTALL/hardware/intel/sof-firmware.sh"
+  run_logged "$OMARCHY_INSTALL/hardware/fix-synaptic-touchpad.sh"
+  run_logged "$OMARCHY_INSTALL/hardware/speaker-tuning.sh"
+  return 0 2>/dev/null || exit 0
+fi
+
 run_logged "$OMARCHY_INSTALL/hardware/network.sh"
 run_logged "$OMARCHY_INSTALL/hardware/input-group.sh"
 run_logged "$OMARCHY_INSTALL/hardware/set-wireless-regdom.sh"

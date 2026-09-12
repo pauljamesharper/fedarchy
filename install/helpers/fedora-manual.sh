@@ -4,6 +4,8 @@
 
 OMARCHY_INSTALL="${OMARCHY_INSTALL:-$HOME/.local/share/omarchy/install}"
 source "$OMARCHY_INSTALL/helpers/distro.sh"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+if is_secureblue; then ESC=run0; else ESC=sudo; fi
 
 if ! is_fedora; then
   exit 0
@@ -17,8 +19,11 @@ fi
 # and leaves the apps missing. --user needs no such repository, and no sudo either.
 flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
-# 1. lazydocker (GitHub binary)
-if ! command -v lazydocker &>/dev/null; then
+# 1. lazydocker - skipped entirely on secureblue: this user runs podman
+# instead, Docker (and its tooling) is deliberately not installed at all.
+if is_secureblue; then
+  :
+elif ! command -v lazydocker &>/dev/null; then
   echo "Installing lazydocker (GitHub binary)..."
   OS_NAME=$(uname -s)
   ARCH_NAME=$(uname -m)
@@ -36,8 +41,8 @@ if ! command -v lazydocker &>/dev/null; then
 
     tmpdir=$(mktemp -d)
     if curl -fL "$LAZYDOCKER_URL" -o "$tmpdir/lazydocker.tar.gz" && tar -xzf "$tmpdir/lazydocker.tar.gz" -C "$tmpdir"; then
-      sudo mv "$tmpdir/lazydocker" /usr/local/bin/
-      sudo chmod +x /usr/local/bin/lazydocker
+      $ESC mv "$tmpdir/lazydocker" /usr/local/bin/
+      $ESC chmod +x /usr/local/bin/lazydocker
     else
       echo "[WARN] Failed to install lazydocker, skipping..."
     fi
@@ -51,8 +56,14 @@ if ! command -v tte &>/dev/null; then
   pip3 install --user terminaltexteffects
 fi
 
-# 3. mise (install script)
-if ! command -v mise &>/dev/null; then
+# 3. mise (brew on secureblue - it's a plain CLI tool with a formula, no
+# reason to reach for its own curl|bash installer instead)
+if is_secureblue; then
+  if ! command -v mise &>/dev/null; then
+    echo "Installing mise (brew)..."
+    command -v brew &>/dev/null && brew install mise
+  fi
+elif ! command -v mise &>/dev/null; then
   echo "Installing mise (install script)..."
   curl https://mise.jdx.dev/install.sh | bash
 fi
@@ -101,10 +112,13 @@ if ! fc-list 2>/dev/null | grep -qi "JetBrainsMono Nerd Font"; then
   fi
 fi
 
-# 6b. starship (fallback if package install missed it)
+# 6b. starship (fallback if package install missed it - base.sh already
+# installs it via brew on secureblue, see omarchy-base.packages.secureblue)
 if ! command -v starship &>/dev/null; then
   echo "Installing starship (fallback path)..."
-  if dnf list --available starship &>/dev/null; then
+  if is_secureblue; then
+    command -v brew &>/dev/null && brew install starship
+  elif dnf list --available starship &>/dev/null; then
     sudo dnf install -y starship || true
   fi
 
@@ -113,9 +127,12 @@ if ! command -v starship &>/dev/null; then
   fi
 fi
 
-# 6c. eza (optional)
+# 6c. eza (optional - base.sh already installs it via brew on secureblue)
 if ! command -v eza &>/dev/null; then
-  if dnf list --available eza &>/dev/null; then
+  if is_secureblue; then
+    echo "Installing eza (optional)..."
+    command -v brew &>/dev/null && brew install eza
+  elif dnf list --available eza &>/dev/null; then
     echo "Installing eza (optional)..."
     sudo dnf install -y eza || echo "[WARN] Optional eza install failed, continuing..."
   fi
@@ -126,7 +143,7 @@ if ! command -v eza &>/dev/null; then
   fi
 
   if ! command -v eza &>/dev/null; then
-    echo "[INFO] Optional eza package is unavailable on this Fedora release"
+    echo "[INFO] Optional eza package is unavailable"
   fi
 fi
 

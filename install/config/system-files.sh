@@ -12,77 +12,147 @@
 # (or the matching omarchy-refresh-* command) to run before the change reaches the system.
 
 omarchy_default="$OMARCHY_PATH/default"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
 
-# SDDM theme and its Hyprland config. install/login/sddm.sh writes [Theme] Current=omarchy, so
-# without this SDDM starts with a theme directory that does not exist.
-install -d /usr/share/sddm/themes
-cp -RT "$omarchy_default/sddm/omarchy" /usr/share/sddm/themes/omarchy
-install -Dm644 "$omarchy_default/sddm/hyprland.lua" /usr/share/sddm/hyprland.lua
+# The unit globs below (*.service, *.path) aren't guaranteed to all have a
+# match - upstream has dropped *.path units before without this script
+# noticing. Without nullglob, a non-matching pattern stays a literal
+# "*.path" string and sed aborts the whole script trying to read it,
+# silently skipping everything after (including /etc/omarchy.conf and the
+# uwsm env.d drop-in that the Hyprland-uwsm session needs to find
+# OMARCHY_PATH at all).
+shopt -s nullglob
 
-# Systemd units: the user services and paths the session expects, the sleep hook, and the
-# faster-shutdown drop-in for user@.service.
-#
-# The units are written for the Arch package and call /usr/bin/omarchy-*, which does not exist here:
-# the fork's commands live in the clone at $OMARCHY_PATH/bin. systemd needs an absolute ExecStart and
-# will not search PATH, so the path is rewritten as the units are installed. That bakes the
-# installing user's clone path into a unit under /usr/lib, which suits this single-user install (the
-# same assumption install/login/sddm.sh already makes for autologin) but would need revisiting if the
-# fork ever supported several users.
-install -d /usr/lib/systemd/user
-for unit in "$omarchy_default"/systemd/user/*.service "$omarchy_default"/systemd/user/*.path; do
-  sed -e "s|/usr/bin/omarchy-|$OMARCHY_PATH/bin/omarchy-|g" \
-    -e "s|/usr/share/omarchy|$OMARCHY_PATH|g" "$unit" \
-    >"/usr/lib/systemd/user/$(basename "$unit")"
-done
-install -Dm755 "$omarchy_default/systemd/system-sleep/unmount-fuse" \
-  /usr/lib/systemd/system-sleep/unmount-fuse
-install -Dm644 "$omarchy_default/systemd/user@.service.d/faster-shutdown.conf" \
-  /usr/lib/systemd/system/user@.service.d/faster-shutdown.conf
+if is_secureblue; then
+  # /usr is a read-only bind mount on a booted OSTree deployment, so every
+  # write below that upstream aims at /usr/... is retargeted to the /etc
+  # equivalent systemd (and fontconfig) already define for exactly this
+  # "admin override without touching the vendor tree" case - not a hack,
+  # this is the documented precedence order (/etc beats /run beats
+  # /usr/lib) for units, sleep hooks, unit drop-ins, zram-generator config,
+  # and environment.d. Two pieces are skipped outright for v1, both purely
+  # cosmetic: the SDDM theme and the Plymouth boot theme (both /usr/share
+  # writes with no /etc equivalent - a real RPM/ostree layer is the correct
+  # way to ship those, not in scope here). install/login/sddm.sh already
+  # knows to leave SDDM on its stock theme rather than reference the
+  # skipped one.
+  install -d /etc/systemd/user
+  for unit in "$omarchy_default"/systemd/user/*.service "$omarchy_default"/systemd/user/*.path; do
+    sed -e "s|/usr/bin/omarchy-|$OMARCHY_PATH/bin/omarchy-|g" \
+      -e "s|/usr/share/omarchy|$OMARCHY_PATH|g" "$unit" \
+      >"/etc/systemd/user/$(basename "$unit")"
+  done
+  install -Dm755 "$omarchy_default/systemd/system-sleep/unmount-fuse" \
+    /etc/systemd/system-sleep/unmount-fuse
+  install -Dm644 "$omarchy_default/systemd/user@.service.d/faster-shutdown.conf" \
+    /etc/systemd/system/user@.service.d/faster-shutdown.conf
 
-# zram tuning drop-in (full RAM, zstd). Outranks Fedora's
-# /usr/lib/systemd/zram-generator.conf default of min(ram, 8192).
-if [[ -d $omarchy_default/systemd/zram-generator.conf.d ]]; then
-  install -d /usr/lib/systemd/zram-generator.conf.d
-  cp -f "$omarchy_default"/systemd/zram-generator.conf.d/*.conf \
-    /usr/lib/systemd/zram-generator.conf.d/
+  if [[ -d $omarchy_default/systemd/zram-generator.conf.d ]]; then
+    install -d /etc/systemd/zram-generator.conf.d
+    cp -f "$omarchy_default"/systemd/zram-generator.conf.d/*.conf \
+      /etc/systemd/zram-generator.conf.d/
+  fi
+
+  printf 'export OMARCHY_PATH="%s"\n' "$OMARCHY_PATH" >/etc/omarchy.conf
+  chmod 644 /etc/omarchy.conf
+
+  # uwsm's env.d search path mirrors systemd's environment.d convention
+  # (/etc overrides /usr/share) - this is the one relocation in this
+  # script not double-checked against a live Hyprland-uwsm session yet;
+  # verify OMARCHY_PATH actually reaches the session on first login, and
+  # fall back to baking the export directly into the uwsm unit if not.
+  install -d /etc/uwsm/env.d
+  sed "s|/usr/share/omarchy/|$OMARCHY_PATH/|g" "$omarchy_default/uwsm/env.d/10-omarchy" \
+    >/etc/uwsm/env.d/10-omarchy
+  chmod 644 /etc/uwsm/env.d/10-omarchy
+
+  install -d /etc/profile.d
+  sed "s|/usr/share/omarchy/|$OMARCHY_PATH/|g" "$OMARCHY_PATH/etc/profile.d/omarchy.sh" \
+    >/etc/profile.d/omarchy.sh
+  chmod 644 /etc/profile.d/omarchy.sh
+
+  install -d /etc/environment.d
+  cp -f "$omarchy_default"/environment.d/*.conf /etc/environment.d/
+
+  # Written straight into conf.d instead of upstream's conf.avail-plus-symlink
+  # indirection - fontconfig scans conf.d directly either way, and this
+  # skips a /usr/share write for no loss of function.
+  install -d /etc/fonts/conf.d
+  install -Dm644 "$omarchy_default/fontconfig/conf.avail/50-omarchy.conf" \
+    /etc/fonts/conf.d/50-omarchy.conf
+else
+  # SDDM theme and its Hyprland config. install/login/sddm.sh writes [Theme] Current=omarchy, so
+  # without this SDDM starts with a theme directory that does not exist.
+  install -d /usr/share/sddm/themes
+  cp -RT "$omarchy_default/sddm/omarchy" /usr/share/sddm/themes/omarchy
+  install -Dm644 "$omarchy_default/sddm/hyprland.lua" /usr/share/sddm/hyprland.lua
+
+  # Systemd units: the user services and paths the session expects, the sleep hook, and the
+  # faster-shutdown drop-in for user@.service.
+  #
+  # The units are written for the Arch package and call /usr/bin/omarchy-*, which does not exist here:
+  # the fork's commands live in the clone at $OMARCHY_PATH/bin. systemd needs an absolute ExecStart and
+  # will not search PATH, so the path is rewritten as the units are installed. That bakes the
+  # installing user's clone path into a unit under /usr/lib, which suits this single-user install (the
+  # same assumption install/login/sddm.sh already makes for autologin) but would need revisiting if the
+  # fork ever supported several users.
+  install -d /usr/lib/systemd/user
+  for unit in "$omarchy_default"/systemd/user/*.service "$omarchy_default"/systemd/user/*.path; do
+    sed -e "s|/usr/bin/omarchy-|$OMARCHY_PATH/bin/omarchy-|g" \
+      -e "s|/usr/share/omarchy|$OMARCHY_PATH|g" "$unit" \
+      >"/usr/lib/systemd/user/$(basename "$unit")"
+  done
+  install -Dm755 "$omarchy_default/systemd/system-sleep/unmount-fuse" \
+    /usr/lib/systemd/system-sleep/unmount-fuse
+  install -Dm644 "$omarchy_default/systemd/user@.service.d/faster-shutdown.conf" \
+    /usr/lib/systemd/system/user@.service.d/faster-shutdown.conf
+
+  # zram tuning drop-in (full RAM, zstd). Outranks Fedora's
+  # /usr/lib/systemd/zram-generator.conf default of min(ram, 8192).
+  if [[ -d $omarchy_default/systemd/zram-generator.conf.d ]]; then
+    install -d /usr/lib/systemd/zram-generator.conf.d
+    cp -f "$omarchy_default"/systemd/zram-generator.conf.d/*.conf \
+      /usr/lib/systemd/zram-generator.conf.d/
+  fi
+
+  # OMARCHY_PATH for every layer. /etc/omarchy.conf is the source of truth
+  # env-bootstrap reads (omarchy-dev-link/-unlink rewrite it); without it every
+  # consumer falls back to the Arch package path /usr/share/omarchy, which does
+  # not exist on a git-clone install - the Hyprland session then dies inside
+  # hyprland.lua before the compositor starts, and SDDM bounces back to the
+  # greeter. Written the same way omarchy-dev-unlink writes it.
+  printf 'export OMARCHY_PATH="%s"\n' "$OMARCHY_PATH" >/etc/omarchy.conf
+  chmod 644 /etc/omarchy.conf
+
+  # Session environment drop-ins. The uwsm hook and the login-shell hook both
+  # source env-bootstrap from the Arch package path; point them into the clone
+  # as they are installed, the same rewrite the systemd units get above.
+  install -d /usr/share/uwsm/env.d
+  sed "s|/usr/share/omarchy/|$OMARCHY_PATH/|g" "$omarchy_default/uwsm/env.d/10-omarchy" \
+    >/usr/share/uwsm/env.d/10-omarchy
+  chmod 644 /usr/share/uwsm/env.d/10-omarchy
+  install -d /etc/profile.d
+  sed "s|/usr/share/omarchy/|$OMARCHY_PATH/|g" "$OMARCHY_PATH/etc/profile.d/omarchy.sh" \
+    >/etc/profile.d/omarchy.sh
+  chmod 644 /etc/profile.d/omarchy.sh
+  install -d /usr/lib/environment.d
+  cp -f "$omarchy_default"/environment.d/*.conf /usr/lib/environment.d/
+
+  # Fontconfig rule, enabled the way Fedora expects (conf.avail plus a symlink in conf.d).
+  install -Dm644 "$omarchy_default/fontconfig/conf.avail/50-omarchy.conf" \
+    /usr/share/fontconfig/conf.avail/50-omarchy.conf
+  install -d /etc/fonts/conf.d
+  ln -sfn /usr/share/fontconfig/conf.avail/50-omarchy.conf /etc/fonts/conf.d/50-omarchy.conf
+
+  # Terminal preference list used by xdg-terminal-exec.
+  install -Dm644 "$omarchy_default/xdg-terminal-exec/hyprland-xdg-terminals.list" \
+    /usr/share/xdg-terminal-exec/hyprland-xdg-terminals.list
+
+  # Plymouth boot theme. omarchy-refresh-plymouth copies into this directory without creating it, so
+  # creating it here is also what makes that command work later.
+  install -d /usr/share/plymouth/themes/omarchy
+  cp -RT "$omarchy_default/plymouth" /usr/share/plymouth/themes/omarchy
 fi
-
-# OMARCHY_PATH for every layer. /etc/omarchy.conf is the source of truth
-# env-bootstrap reads (omarchy-dev-link/-unlink rewrite it); without it every
-# consumer falls back to the Arch package path /usr/share/omarchy, which does
-# not exist on a git-clone install - the Hyprland session then dies inside
-# hyprland.lua before the compositor starts, and SDDM bounces back to the
-# greeter. Written the same way omarchy-dev-unlink writes it.
-printf 'export OMARCHY_PATH="%s"\n' "$OMARCHY_PATH" >/etc/omarchy.conf
-
-# Session environment drop-ins. The uwsm hook and the login-shell hook both
-# source env-bootstrap from the Arch package path; point them into the clone
-# as they are installed, the same rewrite the systemd units get above.
-install -d /usr/share/uwsm/env.d
-sed "s|/usr/share/omarchy/|$OMARCHY_PATH/|g" "$omarchy_default/uwsm/env.d/10-omarchy" \
-  >/usr/share/uwsm/env.d/10-omarchy
-chmod 644 /usr/share/uwsm/env.d/10-omarchy
-install -d /etc/profile.d
-sed "s|/usr/share/omarchy/|$OMARCHY_PATH/|g" "$OMARCHY_PATH/etc/profile.d/omarchy.sh" \
-  >/etc/profile.d/omarchy.sh
-chmod 644 /etc/profile.d/omarchy.sh
-install -d /usr/lib/environment.d
-cp -f "$omarchy_default"/environment.d/*.conf /usr/lib/environment.d/
-
-# Fontconfig rule, enabled the way Fedora expects (conf.avail plus a symlink in conf.d).
-install -Dm644 "$omarchy_default/fontconfig/conf.avail/50-omarchy.conf" \
-  /usr/share/fontconfig/conf.avail/50-omarchy.conf
-install -d /etc/fonts/conf.d
-ln -sfn /usr/share/fontconfig/conf.avail/50-omarchy.conf /etc/fonts/conf.d/50-omarchy.conf
-
-# Terminal preference list used by xdg-terminal-exec.
-install -Dm644 "$omarchy_default/xdg-terminal-exec/hyprland-xdg-terminals.list" \
-  /usr/share/xdg-terminal-exec/hyprland-xdg-terminals.list
-
-# Plymouth boot theme. omarchy-refresh-plymouth copies into this directory without creating it, so
-# creating it here is also what makes that command work later.
-install -d /usr/share/plymouth/themes/omarchy
-cp -RT "$omarchy_default/plymouth" /usr/share/plymouth/themes/omarchy
 
 # Nautilus extensions - localsend.py is what puts "Send via LocalSend" in the file manager's menu.
 # Upstream seeds these through /etc/skel, which only reaches users created after installation, so on

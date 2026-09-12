@@ -1,9 +1,30 @@
 #!/bin/bash
-# Install the base package set from omarchy-base.packages.fedora. Runs as the
-# user; dnf is invoked through the package helpers, which sudo internally.
+# Install the base package set from omarchy-base.packages.{fedora,secureblue}.
+# Runs as the user; the package helpers escalate internally (sudo on plain
+# Fedora, run0 on secureblue).
 source "$OMARCHY_INSTALL/helpers/packages.sh"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
 
-package_file="$OMARCHY_INSTALL/omarchy-base.packages.fedora"
+if is_secureblue; then
+  package_file="$OMARCHY_INSTALL/omarchy-base.packages.secureblue"
+
+  # This user's own ~/dotfiles/Brewfile is the canonical "command-line
+  # programs come from Homebrew" list for this machine (predates this
+  # install, already relied on by their own dotfiles/install.sh). Several
+  # CLI tools Omarchy wants (starship, eza, fzf, ripgrep, bat, fd, zoxide,
+  # jq, tldr, neovim, yt-dlp) are already in it - deliberately not
+  # duplicated in omarchy-base.packages.secureblue (see that file's Shell &
+  # CLI tools section). Running the Brewfile here means both lists end up
+  # satisfied from one source of truth instead of two copies drifting
+  # apart. Safe if the file doesn't exist (e.g. testing this fork without
+  # that dotfiles repo present) or if brew isn't ready yet.
+  if [[ -f "$HOME/dotfiles/Brewfile" ]] && command -v brew &>/dev/null; then
+    echo "[Omarchy] Running brew bundle against ~/dotfiles/Brewfile first..."
+    brew bundle --file="$HOME/dotfiles/Brewfile" || echo "[WARNING] brew bundle had failures - continuing"
+  fi
+else
+  package_file="$OMARCHY_INSTALL/omarchy-base.packages.fedora"
+fi
 
 core_packages=()
 optional_packages=()
@@ -34,26 +55,93 @@ fi
 packages=("${core_packages[@]}" "${selected_optional_pkgs[@]}")
 
 # Install each package, skipping ones already present and collecting failures so
-# a single missing package never aborts the whole base install.
+# a single missing package never aborts the whole base install. On secureblue,
+# each entry may carry a `gui:`/`cli:` tier prefix (see
+# omarchy-base.packages.secureblue's header) routing it to flatpak/brew
+# instead of the default rpm-ostree system tier - entirely idempotent either
+# way, since every tier function checks "already installed" before acting.
+#
+# secureblue's system-tier packages are collected here and installed in one
+# batched rpm-ostree transaction after this loop, not one call per package:
+# run0 has no sudo-style auth cache, so a separate call per package means a
+# separate polkit authentication per package, and a single slow/retried
+# fingerprint scan is enough to blow past the timeout on starting that
+# call's transient unit - the auth completes but the install never runs.
+# gui/cli installs don't have this problem (flatpak --user and brew need no
+# root at all), so those stay as individual calls in this loop.
 failed_packages=()
+system_pending=()
 for pkg in "${packages[@]}"; do
   [[ -z "$pkg" ]] && continue
-  if omarchy_package_installed "$pkg"; then
-    echo "[SKIPPED] $pkg (already installed)"
-    continue
+
+  tier="system"
+  name="$pkg"
+  if is_secureblue; then
+    case "$pkg" in
+    gui:*) tier="gui" name="${pkg#gui:}" ;;
+    cli:*) tier="cli" name="${pkg#cli:}" ;;
+    esac
   fi
 
-  if omarchy_install_package "$pkg"; then
-    echo "[OK] $pkg"
-  else
-    echo "[FAILED] $pkg"
-    if dnf list --available "$pkg" &>/dev/null; then
-      failed_packages+=("$pkg")
+  case "$tier" in
+  gui)
+    if secureblue_gui_installed "$name"; then
+      echo "[SKIPPED] $name (already installed)"
+    elif secureblue_install_gui "$name"; then
+      echo "[OK] $name (flatpak)"
     else
-      failed_packages+=("$pkg (not found in dnf)")
+      echo "[FAILED] $name (flatpak)"
+      failed_packages+=("$name (flatpak)")
     fi
-  fi
+    ;;
+  cli)
+    if secureblue_cli_installed "$name"; then
+      echo "[SKIPPED] $name (already installed)"
+    elif secureblue_install_cli "$name"; then
+      echo "[OK] $name (brew)"
+    else
+      echo "[FAILED] $name (brew)"
+      failed_packages+=("$name (brew)")
+    fi
+    ;;
+  *)
+    if is_secureblue; then
+      if omarchy_package_installed "$name"; then
+        echo "[SKIPPED] $name (already installed)"
+      else
+        system_pending+=("$name")
+      fi
+      continue
+    fi
+
+    if omarchy_package_installed "$name"; then
+      echo "[SKIPPED] $name (already installed)"
+      continue
+    fi
+
+    if omarchy_install_package "$name"; then
+      echo "[OK] $name"
+    else
+      echo "[FAILED] $name"
+      if dnf list --available "$name" &>/dev/null; then
+        failed_packages+=("$name")
+      else
+        failed_packages+=("$name (not found in dnf)")
+      fi
+    fi
+    ;;
+  esac
 done
+
+if is_secureblue && ((${#system_pending[@]} > 0)); then
+  echo "[Omarchy] Installing ${#system_pending[@]} system-tier package(s) in one rpm-ostree transaction..."
+  if secureblue_install_system_batch "${system_pending[@]}"; then
+    printf '[OK] %s\n' "${system_pending[@]}"
+  else
+    echo "[FAILED] batched system-tier install (see above for which package rpm-ostree could not resolve)"
+    failed_packages+=("${system_pending[@]}")
+  fi
+fi
 
 echo
 if ((${#failed_packages[@]} > 0)); then

@@ -1,8 +1,23 @@
 #!/bin/bash
 # Fedora: gum drives the installer's UI, so it has to be there before anything else runs.
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$HOME/.local/share/omarchy/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+
 if command -v gum &>/dev/null; then
   echo "[Omarchy] gum already installed."
+  exit 0
+fi
+
+if is_secureblue; then
+  # gum is a cli-tier package here (see omarchy-base.packages.secureblue) -
+  # brew, not dnf/rpm-ostree, and definitely not a system-level layer just
+  # to render the installer's own UI.
+  echo "[Omarchy] Installing gum (brew)..."
+  if command -v brew &>/dev/null && brew install gum; then
+    exit 0
+  fi
+  echo "[WARNING] Could not install gum via brew. The installer's UI will not render correctly."
   exit 0
 fi
 
