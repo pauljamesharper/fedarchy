@@ -184,6 +184,6 @@ Need help or want to share your setup?
 Thanks to DHH for Omarchy, to the Omadora developer for this fork, and to the Fedora project for
 the base this all runs on.
 
-If this project helped you, please star the repository and share feedback on X by tagging [@tiredkebab](https://x.com/tiredkebab).
+If this project helped you, please star the repository and share feedback on X by tagging [@pauljamesharper](https://x.com/pauljamesharper).
 
 ---
