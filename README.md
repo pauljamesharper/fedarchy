@@ -156,6 +156,38 @@ git -C ~/.local/share/omarchy status -sb
 
 ---
 
+## Fedora Sway Atomic / secureblue: update pipeline fix
+
+On a secureblue (Fedora Sway Atomic, hardened) machine, `Menu > Update > Omarchy` failed
+immediately with `sudo: command not found` while "Updating time..." was printing. secureblue
+ships no `sudo` at all (privilege escalation goes through `run0` instead) and shadows the host
+`dnf` (package changes route through `rpm-ostree`/flatpak/brew), so two scripts in the update
+pipeline that assumed a mutable-Fedora `sudo dnf` world broke outright:
+
+- `bin/omarchy-update-time` called `sudo systemctl restart systemd-timesyncd` unconditionally.
+- `bin/omarchy-update-system-pkgs` called `sudo dnf upgrade -y --refresh` / `sudo dnf autoremove -y`
+  unconditionally.
+
+Both now branch on `is_secureblue`/`is_ostree` (from `install/helpers/distro-secureblue.sh` and
+`install/helpers/packages.sh`, the same helpers the rest of the codebase's secureblue migrations
+already use): `omarchy-update-time` picks `run0` or `sudo` for the escalation, and
+`omarchy-update-system-pkgs` goes through the existing `omarchy_update_system` abstraction, which
+resolves to `rpm-ostree upgrade -y` on any OSTree deployment and to `sudo dnf upgrade` elsewhere;
+the `dnf autoremove` step is skipped on OSTree, which has no equivalent concept.
+
+Because both checks are automatic, these two scripts already do the right thing on plain Fedora
+Sway Atomic (non-secureblue, still `sudo`-capable) with no edits needed there. What genuinely
+still needs porting: a large number of other `bin/omarchy-*` scripts call `sudo` directly and
+haven't been run through this same `is_secureblue`/`is_ostree` check yet, so other commands can
+still hit the same "sudo: command not found" failure on secureblue until they're updated the same
+way (see the `migrations/*.sh` files for the established pattern).
+
+This fix was scoped and applied by Claude Code from a screenshot of the failing update dialog and
+a plain-language description of the problem, in one interactive session. The reporter's own
+review of the change was "vibe coded" — accepted on the strength of the explanation and a
+successful test run, not independently verified line by line — so treat this section as
+unverified until it's been confirmed on a second secureblue machine.
+
 ## Support
 
 Need help or want to share your setup?
@@ -175,7 +207,8 @@ Need help or want to share your setup?
 
 ## Acknowledgements
 
-Thanks to the Asahi Linux community for making Linux  by possible on Macs and thanks to DHH for Omarchy.
+Thanks to the Asahi Linux community for making Linux  by possible on Macs, to DHH for Omarchy, to
+the Omadora developer for this fork, and to the Fedora project for the base this all runs on.
 
 If this project helped you, please star the repository and share feedback on X by tagging [@tiredkebab](https://x.com/tiredkebab).
 

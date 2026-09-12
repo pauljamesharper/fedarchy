@@ -3,5 +3,9 @@
 # omarchy:summary=Restart system time synchronization
 # omarchy:requires-sudo=true
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+if is_secureblue; then ESC=run0; else ESC=sudo; fi
+
 echo "Updating time..."
-sudo systemctl restart systemd-timesyncd
+$ESC systemctl restart systemd-timesyncd

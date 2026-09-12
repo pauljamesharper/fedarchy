@@ -1,14 +1,22 @@
 #!/bin/bash
 
-# omarchy:summary=Update system packages with dnf and remove ones nothing needs any more
+# omarchy:summary=Update system packages and remove ones nothing needs any more
 # omarchy:requires-sudo=true
 
 set -e
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/packages.sh"
+
 echo -e "\e[32m\nUpdate system packages\e[0m"
-sudo dnf upgrade -y --refresh
+omarchy_update_system
 echo
 
-echo -e "\e[32m\nRemove unused packages\e[0m"
-sudo dnf autoremove -y || true
-echo
+# rpm-ostree has no dnf-autoremove equivalent: layered packages on an OSTree
+# deployment don't accumulate orphaned dependencies the way a mutable dnf
+# install tree does, so there is nothing to prune here.
+if ! is_ostree; then
+  echo -e "\e[32m\nRemove unused packages\e[0m"
+  sudo dnf autoremove -y || true
+  echo
+fi
