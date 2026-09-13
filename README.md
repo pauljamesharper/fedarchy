@@ -7,6 +7,12 @@ Universal Blue image, **secureblue** included. secureblue's hardening removes `s
 `run0` and shadows the host `dnf`, so it needs a handful of extra steps beyond the base install —
 see below.
 
+> ### ⚠️ Unofficial
+> This is an unofficial, community-maintained fork. It is not affiliated with, endorsed by, or
+> supported by DHH, the Omarchy project, Fedora, secureblue, or Universal Blue. It touches
+> privilege escalation, package management, and your desktop session on an immutable OS — read
+> before you run it, and if it breaks your system, you keep both pieces.
+
 > ### 🆕 This is Omarchy "Quattro"
 > This branch tracks **Omarchy quattro** — a major rework of the desktop. The bar, launcher,
 > notifications, and OSD (waybar / walker / mako / swayosd) are replaced by a single **Quickshell**
@@ -173,6 +179,15 @@ a plain-language description of the problem, in one interactive session. The rep
 review of the change was "vibe coded" — accepted on the strength of the explanation and a
 successful test run, not independently verified line by line — so treat this section as
 unverified until it's been confirmed on a second secureblue machine.
+
+## License
+
+This repository is MIT-licensed — see [LICENSE](LICENSE) (copyright DHH, carried forward from
+upstream Omarchy). That covers the code in this repo only. It installs and configures a lot of
+software this repo doesn't own: Fedora, secureblue/Universal Blue, Hyprland, Quickshell, browsers,
+and whatever else you choose to install — each under its own license and terms, unaffected by this
+project's license. Themes and plugins installed from third-party git repos (`omarchy theme install`,
+`omarchy plugin add`) likewise carry whatever license their own authors chose.
 
 ## Acknowledgements
 
