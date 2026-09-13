@@ -7,6 +7,11 @@ Universal Blue image, **secureblue** included. secureblue's hardening removes `s
 `run0` and shadows the host `dnf`, so it needs a handful of extra steps beyond the base install —
 see below.
 
+This respin is aimed at people who want Omarchy's look and workflow without giving up an Atomic
+image's stability: `rpm-ostree` deployments mean a bad update is a reboot away from rolled back,
+and the base system stays read-only and reproducible instead of drifting under ad-hoc package
+installs.
+
 > ### ⚠️ Unofficial
 > This is an unofficial, community-maintained fork. It is not affiliated with, endorsed by, or
 > supported by DHH, the Omarchy project, Fedora, secureblue, or Universal Blue. It touches
