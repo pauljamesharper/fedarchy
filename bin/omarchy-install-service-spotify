@@ -1,15 +1,16 @@
 #!/bin/bash
 
 # omarchy:summary=Install Spotify.
-# omarchy:requires-sudo=true
 
 set -e
 
+# Spotify has no Fedora/COPR package; the official Flathub build is the closest
+# thing to an upstream-supported Linux package.
 echo "Installing Spotify..."
-omarchy-pkg-add spotify
+flatpak install -y --user flathub com.spotify.Client
 
 echo "Opening Spotify..."
-setsid uwsm-app -- /usr/bin/spotify >/dev/null 2>&1 &
+setsid uwsm-app -- flatpak run com.spotify.Client >/dev/null 2>&1 &
 
 echo ""
 echo "Spotify has been installed."

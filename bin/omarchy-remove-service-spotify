@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# omarchy:summary=Remove Spotify.
+
+flatpak kill com.spotify.Client 2>/dev/null || true
+flatpak uninstall -y --user com.spotify.Client
+
+echo ""
+echo "Spotify has been removed."

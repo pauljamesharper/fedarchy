@@ -2,10 +2,16 @@
 
 # omarchy:summary=Install Zed Editor and configure it with the current Omarchy theme
 
+# Neither zed nor omazed exist as Fedora/COPR packages here, so use the official
+# Flathub build instead.
 echo "Installing Zed Editor..."
-omarchy-pkg-add zed omazed
+flatpak install -y --user flathub dev.zed.Zed
 
-# Apply Omarchy theme to Zed
-omazed setup
+# omazed (Omarchy's own theme-integration helper) is Arch/AUR-only and targets
+# a native ~/.config/zed path that doesn't match the Flatpak sandbox's config
+# location anyway - skip it rather than fail the whole install over theming.
+if command -v omazed >/dev/null 2>&1; then
+  omazed setup || true
+fi
 
-setsid uwsm-app -- gtk-launch dev.zed.Zed >/dev/null 2>&1 &
+setsid uwsm-app -- flatpak run dev.zed.Zed >/dev/null 2>&1 &

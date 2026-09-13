@@ -1,17 +1,37 @@
 #!/bin/bash
 
-# omarchy:summary=Install a Nerd Font package and switch the system to it
-# omarchy:args=<display-name> <package> <family>
-# omarchy:examples=omarchy install font 'Cascadia Mono' ttf-cascadia-mono-nerd 'CaskaydiaMono Nerd Font'
+# omarchy:summary=Install a Nerd Font (package or direct zip URL) and switch the system to it
+# omarchy:args=<display-name> <package-or-zip-url> <family>
+# omarchy:examples=omarchy install font 'Cascadia Mono' cascadia-mono-nf-fonts 'CaskaydiaMono Nerd Font'
+# omarchy:examples=omarchy install font Iosevka https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Iosevka.zip 'Iosevka Nerd Font Mono'
 
 name="${1-}"
-package="${2-}"
+source="${2-}"
 family="${3-}"
 
-if [[ -z $name || -z $package || -z $family ]]; then
-  echo "Usage: omarchy-install-font <display-name> <package> <family>" >&2
+if [[ -z $name || -z $source || -z $family ]]; then
+  echo "Usage: omarchy-install-font <display-name> <package-or-zip-url> <family>" >&2
   exit 1
 fi
 
+# Most Nerd Fonts have no Fedora package at all (upstream Omarchy relies on Arch's
+# ttf-*-nerd AUR packages, which don't exist here). Where Fedora does ship one
+# (e.g. cascadia-mono-nf-fonts), $source is that package name and omarchy-pkg-add
+# handles it as usual. Otherwise $source is the font's official nerd-fonts
+# release zip URL, fetched straight into ~/.local/share/fonts - the same
+# prebuilt-asset approach already used for voxtype and tensaku on this fork.
+if [[ $source == http://* || $source == https://* ]]; then
+  slug=$(printf '%s' "$name" | tr '[:upper:] ' '[:lower:]-')
+  install_cmd="fontdir=\$HOME/.local/share/fonts/${slug}-nerd-font
+    rm -rf \"\$fontdir\" && mkdir -p \"\$fontdir\"
+    tmp=\$(mktemp -d)
+    trap 'rm -rf \"\$tmp\"' EXIT
+    curl -fL --retry 3 -o \"\$tmp/font.zip\" '${source}' &&
+    unzip -q -o \"\$tmp/font.zip\" -d \"\$fontdir\" &&
+    fc-cache -f \"\$fontdir\""
+else
+  install_cmd="omarchy-pkg-add ${source}"
+fi
+
 exec omarchy-launch-floating-terminal-with-presentation \
-  "echo 'Installing ${name}...'; omarchy-pkg-add ${package} && sleep 2 && omarchy-font-set '${family}'"
+  "echo 'Installing ${name}...'; ${install_cmd} && sleep 2 && omarchy-font-set '${family}'"

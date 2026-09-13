@@ -1,15 +1,16 @@
 #!/bin/bash
 
 # omarchy:summary=Install Signal and launch it.
-# omarchy:requires-sudo=true
 
 set -e
 
+# Signal Desktop ships no rpm, only a Debian/Ubuntu apt repo, so signal-desktop
+# does not exist as a Fedora package. Use the official Flathub build instead.
 echo "Installing Signal..."
-omarchy-pkg-add signal-desktop
+flatpak install -y --user flathub org.signal.Signal
 
 echo "Opening Signal..."
-setsid uwsm-app -- /usr/bin/signal-desktop >/dev/null 2>&1 &
+setsid uwsm-app -- flatpak run org.signal.Signal >/dev/null 2>&1 &
 
 echo ""
 echo "Signal has been installed."

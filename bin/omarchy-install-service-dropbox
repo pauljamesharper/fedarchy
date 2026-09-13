@@ -2,12 +2,14 @@
 
 # omarchy:summary=Install and start the Dropbox service. Must then be authenticated via the web.
 
-echo "Installing all dependencies..."
-omarchy-pkg-add dropbox dropbox-cli libappindicator-gtk3 python-gpgme nautilus-dropbox
+# Neither dropbox nor dropbox-cli exist as Fedora/COPR packages (Dropbox ships no rpm
+# repo at all), so this uses the official Flathub build instead.
+echo "Installing Dropbox..."
+flatpak install -y --user flathub com.dropbox.Client
 
 echo "Adding Dropbox to the bar..."
 omarchy-plugin-enable omarchy.dropbox
 
 echo "Starting Dropbox..."
-uwsm-app -- dropbox-cli start &>/dev/null &
-echo "See Dropbox icon behind  hover tray in top right and right-click for setup."
+uwsm-app -- flatpak run com.dropbox.Client &>/dev/null &
+echo "See Dropbox icon behind the hover tray in top right and right-click for setup."

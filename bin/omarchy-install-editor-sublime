@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# omarchy:summary=Install Sublime Text.
+
+# sublime-text-4 (the Arch/AUR name) doesn't exist here, and this fork has no
+# repo configured for Sublime's own official rpm feed - use the Flathub build
+# instead.
+echo "Installing Sublime Text..."
+flatpak install -y --user flathub com.sublimehq.SublimeText
+
+setsid uwsm-app -- flatpak run com.sublimehq.SublimeText >/dev/null 2>&1 &

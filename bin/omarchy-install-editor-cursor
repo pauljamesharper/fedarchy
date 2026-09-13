@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# omarchy:summary=Install Cursor.
+
+# cursor-bin (the AUR name) doesn't exist here, there's no Fedora/COPR package,
+# and no Flatpak either. The only lead is Homebrew's cask, which ships the
+# upstream AppImage directly.
+echo "Installing Cursor..."
+brew install --cask cursor
+
+setsid uwsm-app -- cursor >/dev/null 2>&1 &

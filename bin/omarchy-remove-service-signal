@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# omarchy:summary=Remove Signal.
+
+flatpak kill org.signal.Signal 2>/dev/null || true
+flatpak uninstall -y --user org.signal.Signal
+
+echo ""
+echo "Signal has been removed."
