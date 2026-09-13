@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# omarchy:summary=Install Bitwarden and its CLI.
+# omarchy:requires-sudo=true
+
+# Bitwarden ships no Fedora repo package for the desktop app (unlike the AUR
+# package upstream Omarchy layers on Arch), so there is nothing for
+# rpm-ostree to resolve by name. It does publish an official .rpm directly,
+# so fetch that and layer the local file instead.
+#
+# bitwarden-cli isn't an rpm at all - not even upstream's own repo carries
+# it - but it is a linuxbrew formula, so it gets the CLI tier instead of the
+# system tier the desktop app needs.
+set -e
+
+TMPDIR=$(mktemp -d)
+trap 'rm -rf "$TMPDIR"' EXIT
+
+echo "Downloading Bitwarden..."
+curl -fsSL -o "$TMPDIR/bitwarden.rpm" "https://bitwarden.com/download/?app=desktop&platform=linux&variant=rpm"
+
+echo "Installing Bitwarden..."
+omarchy-pkg-add "$TMPDIR/bitwarden.rpm"
+
+echo "Installing Bitwarden CLI..."
+brew list --formula bitwarden-cli &>/dev/null || brew install bitwarden-cli
+
+echo "Opening Bitwarden..."
+uwsm-app -- bitwarden >/dev/null 2>&1 &
+
+echo ""
+echo "Bitwarden has been installed."

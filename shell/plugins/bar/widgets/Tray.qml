@@ -11,7 +11,9 @@ BarWidget {
   id: root
   moduleName: "omarchy.tray"
 
-  property bool expanded: false
+  // Always expanded: the drawer's overflow icons stay visible instead of
+  // hiding behind the chevron until hovered.
+  property bool expanded: true
   property bool managePopupOpen: false
   property bool trayMenuOpen: false
   property var activeTrayItem: null
@@ -259,10 +261,6 @@ BarWidget {
         height: root.barSize
         visible: root.allItems.length > 0
 
-        HoverHandler {
-          onHoveredChanged: root.expanded = hovered
-        }
-
         BarIconButton {
           id: expandIcon
           bar: root.bar
@@ -340,10 +338,6 @@ BarWidget {
         width: root.barSize
         height: verticalTrayRoot.drawerBlockHeight
         visible: root.allItems.length > 0
-
-        HoverHandler {
-          onHoveredChanged: root.expanded = hovered
-        }
 
         BarIconButton {
           id: expandIcon
@@ -806,8 +800,8 @@ BarWidget {
 
     TrayIcon {
       anchors.centerIn: parent
-      width: Style.space(12)
-      height: Style.space(12)
+      width: Style.space(24)
+      height: Style.space(24)
       icon: trayItemRoot.modelData.icon
     }
 

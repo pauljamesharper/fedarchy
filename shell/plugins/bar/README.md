@@ -48,6 +48,8 @@ Example `shell.json` (bar subtree only shown):
 
 `centerAnchor` pins one center module to the exact horizontal/vertical center and flanks others around it. Set to an empty string to disable anchoring (the center list is centered as a group).
 
+`omarchy.tray` is always repositioned to sit next to the bar's true center, regardless of where it appears in your `layout` arrays: in the `right` section it moves to the front of that array (closest to center), and in any other section (`left` or `center`) it moves to the back of its array (also closest to center, since those sections sit on the center-ward side of it). To put the tray somewhere specific — e.g. to the left of another center widget — place it in the `left` section rather than `center`; putting it in `center` itself always pushes it past whatever else is there.
+
 ## Module catalogue
 
 ### First-party interactive widgets
@@ -60,7 +62,7 @@ Example `shell.json` (bar subtree only shown):
 | `omarchy.media` | MPRIS now-playing — scrolling track + artist, cover-art popup | left = play/pause · middle = next · scroll = prev/next · right = popup |
 | `omarchy.indicators` | Manual state indicators | left = indicator action |
 | `omarchy.system-update` | Available update indicator | left = update |
-| `omarchy.tray` | System tray | hover = reveal drawer · right on chevron = manage |
+| `omarchy.tray` | System tray, always expanded | right on chevron = manage |
 | `omarchy.weather` | Weather icon + popup with forecast | left = popup · right = full notification |
 | `omarchy.microphone` | Mic icon + scroll volume | left = mute toggle · middle = audio panel · scroll = source volume |
 
