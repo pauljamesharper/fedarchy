@@ -151,6 +151,29 @@ Check branch/upstream state:
 git -C ~/.local/share/omarchy status -sb
 ```
 
+### Automatic updates vs. the first-run "Update System" prompt
+
+First run used to fire an "Update System" notification alongside the welcome/keybindings toasts.
+It's gone now, because on an OSTree/atomic deployment every piece it would have pointed at already
+updates itself on a timer, unattended:
+
+- `rpm-ostree upgrade` — handled by `rpm-ostreed-automatic.timer` (`AutomaticUpdatePolicy=stage` in
+  `/etc/rpm-ostreed.conf`), a stock unit shipped by the base image itself (`/usr/lib/systemd/system`).
+  Not installed by this repo — every Fedora Atomic install has it.
+- Flatpak, Homebrew, and mise — installed by this repo as `omarchy-update-flatpak.timer`,
+  `omarchy-update-brew.timer`, and `omarchy-update-mise.timer` (`default/systemd/user/`, enabled by
+  `install/user/first-run/enable-user-units.sh`), each running once a day. The scripts behind them
+  (`bin/omarchy-update-flatpak`, `bin/omarchy-update-brew`, `bin/omarchy-update-mise`) no-op quietly
+  if the tool in question isn't installed. `Menu > Update > Omarchy` still reaches Flatpak and mise
+  on demand too (`omarchy-update-manual-pkgs`, `omarchy-update-mise`), for anyone who wants an update
+  right now instead of waiting on the timer.
+- Toolbox containers have no timer; update the packages inside one by entering it and running its
+  own package manager.
+
+So `Menu > Update > Omarchy` remains available for anyone without those dotfiles timers, or who
+wants an update to happen right now instead of waiting on the schedule — first run just no longer
+assumes everyone needs the nag.
+
 ---
 
 ## Fedora Sway Atomic / secureblue: update pipeline fix

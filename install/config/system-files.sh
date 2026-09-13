@@ -38,7 +38,7 @@ if is_ostree; then
   # knows to leave SDDM on its stock theme rather than reference the
   # skipped one.
   install -d /etc/systemd/user
-  for unit in "$omarchy_default"/systemd/user/*.service "$omarchy_default"/systemd/user/*.path; do
+  for unit in "$omarchy_default"/systemd/user/*.service "$omarchy_default"/systemd/user/*.path "$omarchy_default"/systemd/user/*.timer; do
     sed -e "s|/usr/bin/omarchy-|$OMARCHY_PATH/bin/omarchy-|g" \
       -e "s|/usr/share/omarchy|$OMARCHY_PATH|g" "$unit" \
       >"/etc/systemd/user/$(basename "$unit")"
@@ -98,7 +98,7 @@ else
   # same assumption install/login/sddm.sh already makes for autologin) but would need revisiting if the
   # fork ever supported several users.
   install -d /usr/lib/systemd/user
-  for unit in "$omarchy_default"/systemd/user/*.service "$omarchy_default"/systemd/user/*.path; do
+  for unit in "$omarchy_default"/systemd/user/*.service "$omarchy_default"/systemd/user/*.path "$omarchy_default"/systemd/user/*.timer; do
     sed -e "s|/usr/bin/omarchy-|$OMARCHY_PATH/bin/omarchy-|g" \
       -e "s|/usr/share/omarchy|$OMARCHY_PATH|g" "$unit" \
       >"/usr/lib/systemd/user/$(basename "$unit")"

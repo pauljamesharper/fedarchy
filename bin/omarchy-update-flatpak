@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# omarchy:summary=Update installed Flatpak apps and runtimes, and drop unused ones
+
+# On a GNOME machine this is GNOME Software's job; Sway/Hyprland sessions have
+# no equivalent, so this is the whole update mechanism for Flatpak. Runs from
+# the daily omarchy-update-flatpak.timer and from Menu > Update > Omarchy alike.
+# --user is refreshed unconditionally since that's where Omarchy's own installer
+# puts everything; --system is only attempted if some system remote is actually
+# configured, so a timer run never stalls on a polkit prompt nobody is there to
+# answer.
+set -uo pipefail
+
+command -v flatpak >/dev/null 2>&1 || { echo "flatpak not found - nothing to do"; exit 0; }
+
+echo -e "\e[32m\nUpdate Flatpak apps (--user)\e[0m"
+flatpak update --user --noninteractive --assumeyes || echo "[WARNING] user Flatpak update failed - continuing"
+
+if flatpak remotes --system --columns=name 2>/dev/null | grep -q .; then
+  echo -e "\e[32m\nUpdate Flatpak apps (--system)\e[0m"
+  flatpak update --system --noninteractive --assumeyes ||
+    echo "[WARNING] system Flatpak update skipped/failed (likely needs interactive auth)"
+fi
+
+echo -e "\e[32m\nRemove unused Flatpak runtimes\e[0m"
+flatpak uninstall --user --unused --noninteractive --assumeyes || true

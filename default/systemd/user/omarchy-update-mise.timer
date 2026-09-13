@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily upgrade of mise-managed tools
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

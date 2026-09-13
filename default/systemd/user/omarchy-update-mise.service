@@ -1,0 +1,12 @@
+[Unit]
+Description=Upgrade mise-managed tools
+Documentation=https://mise.jdx.dev/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+TimeoutStartSec=1200
+Nice=10
+IOSchedulingClass=idle
+ExecStart=/usr/bin/omarchy-update-mise

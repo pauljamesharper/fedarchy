@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# omarchy:summary=Update Homebrew and upgrade all installed formulae/casks
+
+# Fedora Atomic has no GUI updater for the Homebrew prefix, so this is the
+# whole update mechanism for the brew-managed CLI set. Runs from the daily
+# omarchy-update-brew.timer and from Menu > Update > Omarchy alike.
+set -uo pipefail
+
+# systemd --user services (and non-login shells) don't source ~/.bashrc, so
+# put brew on PATH explicitly rather than assume it is already there.
+for p in /home/linuxbrew/.linuxbrew /opt/homebrew "$HOME/.linuxbrew"; do
+  if [[ -x "$p/bin/brew" ]]; then
+    eval "$("$p/bin/brew" shellenv bash)"
+    break
+  fi
+done
+
+command -v brew >/dev/null 2>&1 || { echo "brew not found - nothing to do"; exit 0; }
+
+export HOMEBREW_NO_ENV_HINTS=1 HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_ANALYTICS=1
+
+echo -e "\e[32m\nUpdate Homebrew\e[0m"
+brew update || echo "[WARNING] brew update failed - continuing"
+
+echo -e "\e[32m\nUpgrade Homebrew formulae/casks\e[0m"
+brew upgrade || echo "[WARNING] brew upgrade reported errors"
+
+echo -e "\e[32m\nClean up old Homebrew versions\e[0m"
+brew cleanup --prune=all || true
