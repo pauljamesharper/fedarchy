@@ -133,9 +133,17 @@ omarchy plugin add <git-url> --enable
 ```
 
 `--enable` turns it on right after cloning instead of leaving it installed-but-inactive; add `--yes`
-too if you want to skip the "you're about to run someone else's code" confirmation (non-interactive
-shells require it). Installed plugins show up in `Menu > Plugin`, where they can be enabled,
-disabled, or removed without touching the command line again.
+too if you want to skip the confirmation prompt (non-interactive shells require it). Installed
+plugins show up in `Menu > Plugin`, where they can be enabled, disabled, or removed without
+touching the command line again.
+
+**Plugins run as arbitrary, unsandboxed code inside your long-lived `omarchy-shell` process** —
+same trust model as installing a browser extension or a random npm package. The marketplace listing
+isn't a security review. Before adding one, check who wrote it and how many people use it, and read
+through its source (it's a plain git repo — clone it or browse it on its host first) for anything
+that shells out, reaches the network unexpectedly, or reads outside its own config. `omarchy plugin
+add` clones to a temp directory and shows the URL and this same warning before it does anything
+further, so you get one more look at exactly what you typed before it lands.
 
 ## Troubleshooting and FAQ
 
