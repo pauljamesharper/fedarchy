@@ -40,10 +40,14 @@ provider_from_arg() {
   esac
 }
 
-# The path etc/sudoers.d/omarchy-dns names. The privileged half always runs from
-# there rather than from whichever copy was invoked, so the rule matches even
-# where $OMARCHY_PATH points at a checkout.
-PACKAGED_PATH=/usr/bin/omarchy-dns
+# The path etc/sudoers.d/omarchy-dns names. No Fedora package installs a real
+# copy at /usr/bin yet (pkg-test is still Arch/pacman-only), so until that
+# exists, root resolves this from $OMARCHY_PATH like everything else omarchy
+# runs — etc-files.sh rewrites the sudoers rule to match at deploy time. That
+# does mean the NOPASSWD grant ultimately points at a user-writable checkout
+# instead of a fixed root-owned path; fine for a single-user dev box, not the
+# eventual packaged answer.
+PACKAGED_PATH="${OMARCHY_PATH:-$HOME/.local/share/omarchy}/bin/omarchy-dns"
 
 # True when sudo would run this exact command without stopping for a password.
 # `sudo -l` on its own reports whether a command is permitted, which the blanket

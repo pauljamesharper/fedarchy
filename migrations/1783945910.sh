@@ -12,6 +12,7 @@ OMARCHY_PATH="${OMARCHY_PATH:-$HOME/.local/share/omarchy}"
 OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
 
 source "$OMARCHY_INSTALL/helpers/distro.sh"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
 
 is_fedora || exit 0
 
@@ -19,6 +20,8 @@ if [[ -f /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:scottames:ghostty.repo
   exit 0
 fi
 
+if is_secureblue; then ESC=run0; else ESC=sudo; fi
+
 echo "[INFO] Enabling COPR repository: scottames/ghostty"
-sudo dnf copr enable -y scottames/ghostty ||
+$ESC dnf copr enable -y scottames/ghostty ||
   echo "[WARNING] Ghostty COPR unavailable for this Fedora release - continuing"

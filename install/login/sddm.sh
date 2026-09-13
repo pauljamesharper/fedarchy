@@ -17,20 +17,16 @@ $ESC systemctl enable getty@tty1.service >/dev/null 2>&1 || true
 $ESC mkdir -p /etc/sddm.conf.d
 
 if is_secureblue; then
-  # Two things deliberately skipped here on secureblue, both conservative
-  # defaults rather than settled decisions:
-  #   - Autologin: secureblue was chosen specifically for its hardening: an
-  #     unattended sudo/root-analog rule was already ripped out for the same
-  #     reason (see install/preflight/passwordless-installer.sh). Silently
-  #     enabling autologin here would be the same category of regression.
-  #     Revisit explicitly if wanted - it is not a technical blocker.
-  #   - The "omarchy" SDDM theme: install/config/system-files.sh's
-  #     /usr/share/sddm/themes install is out of scope for v1 (read-only
-  #     /usr on a booted OSTree deployment - see that script's secureblue
-  #     branch). Leaving SDDM on its stock theme means it actually renders,
-  #     instead of pointing it at a `Current=` theme that was never
-  #     installed.
-  echo "[sddm] secureblue: leaving autologin off and SDDM on its stock theme (see comments in this script)."
+  # Autologin deliberately skipped on secureblue, a conservative default
+  # rather than a settled decision: secureblue was chosen specifically for
+  # its hardening, and an unattended sudo/root-analog rule was already
+  # ripped out for the same reason (see
+  # install/preflight/passwordless-installer.sh). Silently enabling
+  # autologin here would be the same category of regression. Revisit
+  # explicitly if wanted - it is not a technical blocker. Plain atomic
+  # Fedora has no such hardening posture, so it gets autologin below like
+  # mutable Fedora already does.
+  echo "[sddm] secureblue: leaving autologin off (see comments in this script)."
 else
   AUTOLOGIN_USER="${SUDO_USER:-$USER}"
   if [[ "$AUTOLOGIN_USER" == "root" ]] || [[ -z "$AUTOLOGIN_USER" ]]; then
@@ -50,7 +46,17 @@ else
 User=$AUTOLOGIN_USER
 Session=$SESSION_NAME
 EOF
+fi
 
+if is_ostree; then
+  # The "omarchy" SDDM theme is skipped on any OSTree/atomic Fedora target
+  # (secureblue and plain atomic alike): install/config/system-files.sh's
+  # /usr/share/sddm/themes install is out of scope for v1 (read-only /usr
+  # on a booted OSTree deployment - see that script's branch). Leaving
+  # SDDM on its stock theme means it actually renders, instead of pointing
+  # it at a `Current=` theme that was never installed.
+  echo "[sddm] OSTree Fedora: leaving SDDM on its stock theme (see comments in this script)."
+else
   cat <<EOF | $ESC tee /etc/sddm.conf.d/theme.conf >/dev/null
 [Theme]
 Current=omarchy

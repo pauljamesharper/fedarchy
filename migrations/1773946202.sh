@@ -6,11 +6,14 @@ fi
 
 packages=(
   yaru-icon-theme
-  yaru-gtk2-theme
   yaru-gtk3-theme
   yaru-gtk4-theme
   yaru-gtksourceview-theme
 )
+
+# yaru-gtk2-theme is deliberately absent: Fedora 44 ships no GTK2 theme at
+# all any more (see migrations/1783927950.sh, which drops it for the same
+# reason on machines that still carry it from an older release).
 
 missing=()
 for pkg in "${packages[@]}"; do

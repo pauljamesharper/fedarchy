@@ -5,7 +5,11 @@ echo "Give the pre-suspend lock a window it can actually finish in"
 # InhibitDelayMaxSec, but logind only reads it on reload.
 #
 # Reload rather than restart: restarting systemd-logind tears down the session.
-sudo systemctl reload systemd-logind >/dev/null 2>&1 || true
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+if is_secureblue; then ESC=run0; else ESC=sudo; fi
+
+$ESC systemctl reload systemd-logind >/dev/null 2>&1 || true
 
 # Check the property logind actually enforces, not the reload's exit status: a
 # reload that returns success while the drop-in is missing or unparsed leaves

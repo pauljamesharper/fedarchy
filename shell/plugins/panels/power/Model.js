@@ -67,14 +67,24 @@ function batteryIcon(device, onBattery, states) {
   var d = device || {}
   if (!d.isPresent) return ""
 
-  var chargingIcons = ["󰢜", "󰂆", "󰂇", "󰂈", "󰢝", "󰂉", "󰢞", "󰂊", "󰂋", "󰂅"]
-  var defaultIcons = ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
-  var index = Math.max(0, Math.min(9, Math.floor(d.percentage * 10)))
+  // Classic Font Awesome battery glyphs (U+F240-U+F244), not the newer
+  // Material Design Icons range: the MDI codepoints used here previously
+  // (Supplementary PUA-A) have unreliable coverage across installed Nerd
+  // Font builds and intermittently render as fallback tofu/garbage text.
+  // This block is bundled in essentially every Nerd Font patch, so it
+  // resolves consistently regardless of which font Qt's fallback picks.
+  var defaultIcons = ["", "", "", "", ""]
+  var index = Math.max(0, Math.min(4, Math.floor(d.percentage * 5)))
   var threshold = chargeThresholdActive(d, onBattery, states)
 
+  // A single bolt glyph while charging, not the level icon with a second
+  // glyph appended: BarIconButton's OpticalGlyph measures and optically
+  // centers one glyph's bounding box in a canvas sized for exactly one
+  // character, so two concatenated glyphs would overflow/mis-center
+  // rather than read as a combined "charging at this level" icon.
   if (threshold) return defaultIcons[index]
-  if (d.state === states.FullyCharged) return "󰂅"
-  if (!onBattery) return chargingIcons[index]
+  if (d.state === states.FullyCharged) return defaultIcons[4]
+  if (!onBattery) return ""
   return defaultIcons[index]
 }
 

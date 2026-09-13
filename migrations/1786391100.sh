@@ -30,12 +30,16 @@ if [[ -f $conf ]] &&
   exit 0
 fi
 
-sudo mkdir -p "$(dirname "$conf")"
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+if is_secureblue; then ESC=run0; else ESC=sudo; fi
+
+$ESC mkdir -p "$(dirname "$conf")"
 
 # Append rather than overwrite, so anything else a user keeps here survives:
 # modprobe reads every options line for a module, and nothing else sets
 # feature_disable. The leading newline also covers a file that ends without one.
-sudo tee -a "$conf" >/dev/null <<'EOF'
+$ESC tee -a "$conf" >/dev/null <<'EOF'
 
 # Broadcom's firmware supplicant and authenticator fail the WPA four-way
 # handshake on Apple hardware, which surfaces as a rejected password. Disable

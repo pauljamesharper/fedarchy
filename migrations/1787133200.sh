@@ -1,3 +1,4 @@
 echo "Add webp decoding to the shell"
 
-omarchy-pkg-add qt6-imageformats
+# Fedora's package is qt6-qtimageformats, not qt6-imageformats.
+omarchy-pkg-add qt6-qtimageformats

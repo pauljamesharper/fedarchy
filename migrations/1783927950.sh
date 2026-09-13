@@ -10,7 +10,7 @@ add_package() {
   rpm -q "$pkg" >/dev/null 2>&1 && return 0
 
   echo "[INFO] Installing $pkg"
-  sudo dnf install -y "$pkg"
+  omarchy-pkg-add "$pkg"
 }
 
 drop_package() {
@@ -19,7 +19,7 @@ drop_package() {
   rpm -q "$pkg" >/dev/null 2>&1 || return 0
 
   echo "[INFO] Removing $pkg (gone from Fedora 44)"
-  sudo dnf remove -y --noautoremove "$pkg"
+  omarchy-pkg-drop "$pkg"
 }
 
 # This guarantees the end state instead of only performing a swap. Some of these old names were never
@@ -31,10 +31,12 @@ replace_package() {
 
   if rpm -q "$old" >/dev/null 2>&1; then
     echo "[INFO] Replacing $old with $new"
-    # A swap, not an install: the pair can own the same files (wget and wget2-wget both own
-    # /usr/bin/wget), so installing the new one alongside the old would be a file conflict.
-    sudo dnf swap -y "$old" "$new" ||
-      { sudo dnf remove -y --noautoremove "$old" && sudo dnf install -y "$new"; }
+    # omarchy-pkg-add/omarchy-pkg-drop have no native "swap" (dnf's atomic swap
+    # has no rpm-ostree equivalent), so this does it as remove-then-add. The
+    # pair can own the same files (wget and wget2-wget both own /usr/bin/wget),
+    # so the old one has to actually be gone before the new one installs.
+    drop_package "$old"
+    add_package "$new"
     return
   fi
 

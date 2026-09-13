@@ -20,10 +20,12 @@ enable_service() {
 enable_service cups.service
 enable_service cups-browsed.service
 enable_service avahi-daemon.service
-# docker.socket NOT enabled on secureblue: this user runs podman instead,
-# Docker is deliberately not installed at all here (see
-# omarchy-base.packages.secureblue's Containers section).
-is_secureblue || enable_service docker.socket
+# docker.socket NOT enabled on any OSTree/atomic Fedora target (secureblue
+# and plain atomic alike): these images ship podman instead, Docker is
+# deliberately not installed at all there (see
+# omarchy-base.packages.secureblue's Containers section; confirmed
+# empirically - no docker.socket unit exists on plain atomic Fedora either).
+is_ostree || enable_service docker.socket
 enable_service systemd-resolved.service
 enable_service NetworkManager.service
 # Don't let network-online.target (pulled in by cups-browsed) hold up
@@ -31,11 +33,12 @@ enable_service NetworkManager.service
 # needs to block on the network. Mirrors the systemd-networkd-wait-online mask
 # in install/hardware/network.sh.
 systemctl mask NetworkManager-wait-online.service
-# power-profiles-daemon.service NOT enabled on secureblue: this image ships
-# tuned-ppd instead (same ppd-service D-Bus interface, hard-conflicts with
-# power-profiles-daemon - see omarchy-base.packages.secureblue), and its
-# service is already enabled by default.
-is_secureblue || enable_service power-profiles-daemon.service
+# power-profiles-daemon.service NOT enabled on any OSTree/atomic Fedora
+# target: these images ship tuned-ppd instead (same ppd-service D-Bus
+# interface, hard-conflicts with power-profiles-daemon - see
+# omarchy-base.packages.secureblue), and its service is already enabled by
+# default (confirmed empirically on plain atomic Fedora too).
+is_ostree || enable_service power-profiles-daemon.service
 enable_service sddm.service
 # Kill one runaway app scope instead of letting reclaim thrashing take the
 # whole session down. [Install] pulls in systemd-oomd.socket via Also=, which

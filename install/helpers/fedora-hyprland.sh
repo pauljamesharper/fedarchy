@@ -31,16 +31,18 @@ source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
 
 is_fedora || exit 0
 
-# secureblue: same stable/git selection and swap logic as below, but every
-# install/swap is an rpm-ostree layer that only takes effect on the *next*
-# boot - `rpm -q` here still reflects the currently booted deployment, not
-# a pending one, so re-running this script before rebooting is a safe
-# no-op (the pending change is already queued) and re-running it after
-# rebooting picks up wherever the swap left off. `rpm-ostree install
-# X --uninstall Y` is the atomic-swap equivalent of `dnf swap Y X` - one
-# transaction, resolved fully before anything is written, same safety
-# property as dnf's swap.
-if is_secureblue; then
+# Any OSTree/atomic Fedora target (secureblue and plain atomic alike): same
+# stable/git selection and swap logic as below, but every install/swap is
+# an rpm-ostree layer that only takes effect on the *next* boot - `rpm -q`
+# here still reflects the currently booted deployment, not a pending one,
+# so re-running this script before rebooting is a safe no-op (the pending
+# change is already queued) and re-running it after rebooting picks up
+# wherever the swap left off. `rpm-ostree install X --uninstall Y` is the
+# atomic-swap equivalent of `dnf swap Y X` - one transaction, resolved
+# fully before anything is written, same safety property as dnf's swap.
+# No escalation wrapper either way: rpm-ostree is a D-Bus client to the
+# already-root rpm-ostreed daemon, which authorizes the call itself.
+if is_ostree; then
   if rpm -q hyprland &>/dev/null; then
     rpm -q hyprland-uwsm &>/dev/null || rpm-ostree install --idempotent -y hyprland-uwsm
     echo "[hyprland] stable hyprland installed"

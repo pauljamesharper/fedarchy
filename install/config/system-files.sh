@@ -23,8 +23,9 @@ source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
 # OMARCHY_PATH at all).
 shopt -s nullglob
 
-if is_secureblue; then
-  # /usr is a read-only bind mount on a booted OSTree deployment, so every
+if is_ostree; then
+  # /usr is a read-only bind mount on a booted OSTree deployment (secureblue
+  # and plain atomic Fedora - Silverblue/Kinoite/Sericea - alike), so every
   # write below that upstream aims at /usr/... is retargeted to the /etc
   # equivalent systemd (and fontconfig) already define for exactly this
   # "admin override without touching the vendor tree" case - not a hack,

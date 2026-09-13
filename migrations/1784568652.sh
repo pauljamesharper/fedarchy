@@ -1,8 +1,13 @@
 echo "Stop waiting for the network before showing the desktop"
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+
 as_root() {
   if (( EUID == 0 )); then
     "$@"
+  elif is_secureblue; then
+    run0 "$@"
   else
     sudo "$@"
   fi

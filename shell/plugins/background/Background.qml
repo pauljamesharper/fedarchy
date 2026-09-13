@@ -194,14 +194,19 @@ Item {
         window: panel
       }
       color: "transparent"
-      // Keep render updates enabled. The background layer has been observed to
-      // lose its committed buffer while parked with updatesEnabled=false,
-      // leaving a black desktop until omarchy-shell is restarted. The wallpaper
-      // itself is static, so this favors correctness over a small render-loop
-      // optimization.
-      updatesEnabled: true
 
       property bool maskReady: false
+
+      // Keep render updates enabled where this Quickshell build exposes the
+      // property. The background layer has been observed to lose its
+      // committed buffer while parked with updatesEnabled=false, leaving a
+      // black desktop until omarchy-shell is restarted. The wallpaper itself
+      // is static, so this favors correctness over a small render-loop
+      // optimization. Assigned imperatively, not as a property binding, so
+      // shell.qml still loads on builds that don't have this property yet.
+      Component.onCompleted: {
+        if ("updatesEnabled" in panel) panel.updatesEnabled = true
+      }
 
       function maybeStartReveal() {
         if (!root.incomingBackground || root.revealProgress !== 0 || maskReady) return

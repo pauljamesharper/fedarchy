@@ -1,8 +1,13 @@
 echo "Retire systemd-networkd in favor of NetworkManager"
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+
 as_root() {
   if (( EUID == 0 )); then
     "$@"
+  elif is_secureblue; then
+    run0 "$@"
   else
     sudo "$@"
   fi

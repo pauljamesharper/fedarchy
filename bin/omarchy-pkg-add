@@ -2,7 +2,7 @@
 # omarchy:summary=Install packages with dnf
 # omarchy:args=<packages...>
 
-OMARCHY_INSTALL=${OMARCHY_INSTALL:-"$HOME/.local/share/omarchy/install"}
+OMARCHY_INSTALL=${OMARCHY_INSTALL:-"$OMARCHY_PATH/install"}
 source "$OMARCHY_INSTALL/helpers/packages.sh"
 
 for pkg in "$@"; do
@@ -11,8 +11,15 @@ for pkg in "$@"; do
     exit 1
   fi
 
-  # Secondary check to handle states where package manager doesn't actually register an error
-  if ! omarchy_package_installed "$pkg"; then
+  # Secondary check to handle states where package manager doesn't actually
+  # register an error - valid on mutable Fedora, where dnf install takes
+  # effect immediately. Skipped on OSTree/secureblue: rpm-ostree only stages
+  # a layered package for the next boot (see install-atomic.sh), so `rpm -q`
+  # right after a successful, idempotent install call would always read
+  # "not installed" even when the request was accepted correctly. The exit
+  # status already checked above is rpm-ostree's own, and is what actually
+  # reflects success there.
+  if ! is_ostree && ! omarchy_package_installed "$pkg"; then
     echo -e "\033[31mError: Package '$pkg' did not install\033[0m" >&2
     exit 1
   fi

@@ -99,8 +99,12 @@ Panel {
   property string identityText: ""
 
   // ConnectionFailReason values as a plain object, so Model.js helpers stay
-  // pure JS and Node-testable.
-  readonly property var connectionFailReasons: ({
+  // pure JS and Node-testable. Guarded with typeof: this Quickshell build's
+  // Networking module doesn't define the enum yet, and referencing it bare
+  // would throw a ReferenceError at component load, failing the whole panel.
+  // On such builds the connection-failed signal never fires either, so an
+  // empty map here just means reason lookups fall through to "" harmlessly.
+  readonly property var connectionFailReasons: (typeof ConnectionFailReason === "undefined") ? ({}) : ({
     NoSecrets: ConnectionFailReason.NoSecrets,
     WifiAuthTimeout: ConnectionFailReason.WifiAuthTimeout,
     WifiNetworkLost: ConnectionFailReason.WifiNetworkLost,

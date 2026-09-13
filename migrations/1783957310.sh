@@ -9,4 +9,4 @@ echo "Remove blueman - bluetui is the Bluetooth UI"
 rpm -q blueman >/dev/null 2>&1 || exit 0
 
 echo "[INFO] Removing blueman"
-sudo dnf remove -y --noautoremove blueman || echo "[WARNING] Could not remove blueman - continuing"
+omarchy-pkg-drop blueman || echo "[WARNING] Could not remove blueman - continuing"

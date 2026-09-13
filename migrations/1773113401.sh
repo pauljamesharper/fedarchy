@@ -4,9 +4,13 @@ if omarchy-pkg-missing zram-generator; then
   omarchy-pkg-add zram-generator
 fi
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+if is_secureblue; then ESC=run0; else ESC=sudo; fi
+
 if [[ ! -f /etc/systemd/zram-generator.conf ]]; then
-  sudo mkdir -p /etc/systemd
-  sudo tee /etc/systemd/zram-generator.conf >/dev/null <<'EOF'
+  $ESC mkdir -p /etc/systemd
+  $ESC tee /etc/systemd/zram-generator.conf >/dev/null <<'EOF'
 [zram0]
 zram-size = ram
 compression-algorithm = zstd
@@ -15,5 +19,5 @@ fs-type = swap
 EOF
 fi
 
-sudo systemctl daemon-reload
-sudo systemctl start systemd-zram-setup@zram0.service
+$ESC systemctl daemon-reload
+$ESC systemctl start systemd-zram-setup@zram0.service

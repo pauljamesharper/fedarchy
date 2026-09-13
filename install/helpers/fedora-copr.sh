@@ -10,20 +10,26 @@ if ! is_fedora; then
   exit 0
 fi
 
-# secureblue has no dnf, so no `dnf copr enable` - but rpm-ostree reads the
-# same /etc/yum.repos.d/*.repo files dnf does, so a COPR repo just needs its
-# repo file written by hand instead of fetched via the dnf-copr plugin. Only
-# lionheartp/Hyprland is still needed here: atim/starship and atim/lazygit
-# are superseded by brew (see packages-secureblue.sh / packaging rework),
-# and the two optional COPRs (nclundell/fedora-extras, scottames/ghostty)
-# are dnf-plugin conveniences with no non-dnf equivalent worth building for
-# an optional repo - skipped outright on this path.
-if is_secureblue; then
+# No OSTree/atomic Fedora target has a host dnf (secureblue and plain
+# atomic Fedora - Silverblue/Kinoite/Sericea - alike; confirmed empirically:
+# both shadow dnf with "Use: rpm-ostree | flatpak | toolbox"), so no
+# `dnf copr enable` - but rpm-ostree reads the same /etc/yum.repos.d/*.repo
+# files dnf does (a writable, persisted part of any OSTree deployment), so a
+# COPR repo just needs its repo file written by hand instead of fetched via
+# the dnf-copr plugin. Only lionheartp/Hyprland is still needed here:
+# atim/starship and atim/lazygit are superseded by brew (see
+# packages-secureblue.sh / packaging rework), and the two optional COPRs
+# (nclundell/fedora-extras, scottames/ghostty) are dnf-plugin conveniences
+# with no non-dnf equivalent worth building for an optional repo - skipped
+# outright on this path.
+if is_ostree; then
+  source "$OMARCHY_INSTALL/helpers/fedora-copr-protect.sh"
+
   LIONHEARTP_REPO_URL="https://copr.fedorainfracloud.org/coprs/lionheartp/Hyprland/repo/fedora-$(fedora_version)/"
   LIONHEARTP_REPO_FILE="/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:lionheartp:Hyprland.repo"
 
-  echo "Fetching lionheartp/Hyprland COPR repo file (secureblue: no dnf copr enable)..."
-  if curl -fsSL "$LIONHEARTP_REPO_URL" | run0 tee "$LIONHEARTP_REPO_FILE" >/dev/null; then
+  echo "Fetching lionheartp/Hyprland COPR repo file (OSTree: no dnf copr enable)..."
+  if curl -fsSL "$LIONHEARTP_REPO_URL" | _copr_escalate tee "$LIONHEARTP_REPO_FILE" >/dev/null; then
     echo "✓ Wrote $LIONHEARTP_REPO_FILE"
   else
     echo "✗ Failed to fetch/write the lionheartp/Hyprland COPR repo file" >&2
@@ -31,7 +37,6 @@ if is_secureblue; then
     exit 1
   fi
 
-  source "$OMARCHY_INSTALL/helpers/fedora-copr-protect.sh"
   echo "Applying repo protections for Hyprland stability..."
   fedora_remove_dead_copr_repos
   fedora_apply_copr_protections

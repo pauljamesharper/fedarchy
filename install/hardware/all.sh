@@ -1,14 +1,16 @@
-source "${OMARCHY_INSTALL:-$HOME/.local/share/omarchy/install}/helpers/distro-secureblue.sh"
-
-if is_secureblue; then
-  # secureblue targets are plain x86_64 laptops, not Apple Silicon - this is
-  # an explicit allowlist rather than the "call everything, let each leaf
-  # self-gate" convention below, because one leaf (network.sh) does
-  # *unconditional* NetworkManager/iwd rework for Asahi-specific quirks that
-  # do not apply here and was not safe to trust to self-gate. Everything
-  # kept below is still DMI/CPU/kernel-module gated inside its own script,
-  # same as always - this list just skips scripts that can only ever be
-  # dead weight on this hardware family instead of calling them to find out.
+if [[ "$(uname -m)" != "aarch64" ]]; then
+  # This is a hardware-family split (x86_64 Intel/AMD laptop vs. Apple
+  # Silicon), not a distro/OSTree one - both secureblue and plain atomic
+  # Fedora (Sericea/Silverblue/Kinoite) install-atomic.sh targets are
+  # x86_64 today, same as this repo's install.sh target (Fedora Asahi) is
+  # exclusively aarch64. This is an explicit allowlist rather than the
+  # "call everything, let each leaf self-gate" convention below, because
+  # one leaf (network.sh) does *unconditional* NetworkManager/iwd rework
+  # for Asahi-specific quirks that do not apply here and was not safe to
+  # trust to self-gate. Everything kept below is still DMI/CPU/kernel-module
+  # gated inside its own script, same as always - this list just skips
+  # scripts that can only ever be dead weight on this hardware family
+  # instead of calling them to find out.
   run_logged "$OMARCHY_INSTALL/hardware/input-group.sh"
   run_logged "$OMARCHY_INSTALL/hardware/bluetooth.sh"
   run_logged "$OMARCHY_INSTALL/hardware/vulkan.sh"

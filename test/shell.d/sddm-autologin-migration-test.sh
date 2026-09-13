@@ -12,7 +12,19 @@ trap 'rm -rf "$test_tmp"' EXIT
 
 stub_bin="$test_tmp/bin"
 autologin="$test_tmp/etc/sddm.conf.d/autologin.conf"
-mkdir -p "$stub_bin"
+mkdir -p "$stub_bin" "$test_tmp/omarchy-install/helpers"
+
+# The migration sources distro-secureblue.sh and picks sudo vs run0 via
+# is_secureblue(). What this test actually exercises is the crypt-detection
+# logic ahead of that choice, so pin it to the non-secureblue path (matching
+# this test's original, sudo-only assumption) rather than doubling every
+# scenario below for both escalation mechanisms. This fake also keeps the
+# test deterministic when it runs on a real secureblue machine, where the
+# real is_secureblue() would otherwise always win.
+cat >"$test_tmp/omarchy-install/helpers/distro-secureblue.sh" <<'SH'
+is_secureblue() { return 1; }
+is_ostree() { return 1; }
+SH
 
 # findmnt reports a btrfs root with its subvolume attached, and lsblk only
 # resolves the device once that is stripped -- the case that decides whether an
@@ -37,6 +49,8 @@ cat >"$stub_bin/sudo" <<'SH'
 "$@"
 SH
 
+cp "$stub_bin/sudo" "$stub_bin/run0"
+
 chmod +x "$stub_bin"/*
 
 run_migration() {
@@ -45,6 +59,7 @@ run_migration() {
   printf '[Autologin]\nUser=owner\n' >"$autologin"
 
   TEST_ROOT_SOURCE="$root_source" TEST_RESOLVABLE_DEVICE="$device" TEST_ROOT_TYPE="$root_type" \
+    OMARCHY_INSTALL="$test_tmp/omarchy-install" \
     PATH="$stub_bin:$PATH" \
     bash -euo pipefail -c '
       migration=$1; autologin=$2

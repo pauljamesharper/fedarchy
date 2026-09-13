@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "omarchy.pomodoro",
+  "name": "Pomodoro",
+  "version": "1.0.0",
+  "author": "Omarchy",
+  "description": "GNOME Pomodoro timer status and controls",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Pomodoro.qml"
+  },
+  "barWidget": {
+    "displayName": "Pomodoro",
+    "description": "GNOME Pomodoro timer status and controls",
+    "category": "Time",
+    "allowMultiple": false
+  }
+}

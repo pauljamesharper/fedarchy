@@ -17,9 +17,13 @@ conf="${OMARCHY_BRCMFMAC_CONF:-/etc/modprobe.d/brcmfmac.conf}"
 # SIGPIPE as "no such hardware" (#6608), so let lspci finish writing.
 lspci -nn | grep -E "14e4:(4425|4433)" >/dev/null || exit 0
 
-# Read through sudo so a root-only file fails the migration loudly and gets
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+if is_secureblue; then ESC=run0; else ESC=sudo; fi
+
+# Read as root so a root-only file fails the migration loudly and gets
 # retried, rather than reading as empty and burning the once-per-user marker.
-content="$(sudo cat "$conf")"
+content="$($ESC cat "$conf")"
 
 # Byte for byte what the leaf wrote, and what migrations/1786391100.sh appended
 # after a blank line. Matching the whole block is the ownership test: a line
@@ -48,12 +52,12 @@ if [[ -z $rest ]]; then
   # The file held nothing but Omarchy's block. A symlinked config is emptied
   # through the link rather than removed, so the link its owner set up stays.
   if [[ -L $conf ]]; then
-    : | sudo tee "$conf" >/dev/null
+    : | $ESC tee "$conf" >/dev/null
   else
-    sudo rm -f "$conf"
+    $ESC rm -f "$conf"
   fi
 else
   # Anything the user kept above the appended block survives. tee writes
   # through a symlink where sed -i would replace it with a regular file.
-  printf '%s\n' "$rest" | sudo tee "$conf" >/dev/null
+  printf '%s\n' "$rest" | $ESC tee "$conf" >/dev/null
 fi

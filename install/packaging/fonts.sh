@@ -11,11 +11,12 @@ mkdir -p ~/.local/share/fonts
 cp "$OMARCHY_PATH/default/fonts/omarchy/omarchy.ttf" ~/.local/share/fonts/
 
 # Ensure an icon-capable font fallback exists so shell module glyphs render
-# at a consistent size. (On secureblue this is also already listed in
-# omarchy-base.packages.secureblue - this is just a belt-and-suspenders
-# check, same as the Fedora path, and just as idempotent either way.)
+# at a consistent size. (On any OSTree/atomic target this is also already
+# listed in omarchy-base.packages.secureblue - this is just a
+# belt-and-suspenders check, same as the Fedora path, and just as
+# idempotent either way.)
 if is_fedora && ! rpm -q cascadia-mono-nf-fonts &>/dev/null; then
-  if is_secureblue; then
+  if is_ostree; then
     rpm-ostree install --idempotent -y cascadia-mono-nf-fonts || true
   else
     sudo dnf install -y cascadia-mono-nf-fonts || true

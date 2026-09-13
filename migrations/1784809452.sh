@@ -2,9 +2,14 @@ echo "Remove Snapper timeline snapshots leaked by earlier defaults"
 
 SNAPPER_CONFIG_PATH="${OMARCHY_SNAPPER_CONFIG_PATH:-/etc/snapper/configs/root}"
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+
 as_root() {
   if (( EUID == 0 )); then
     "$@"
+  elif is_secureblue; then
+    run0 "$@"
   else
     sudo "$@"
   fi

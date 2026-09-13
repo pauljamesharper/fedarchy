@@ -39,18 +39,14 @@ o.bind("SHIFT + XF86AudioMute", "Switch audio output", "omarchy-audio-output-swi
 o.bind("SHIFT + XF86AudioPause", "Switch media source", "omarchy-audio-source-switch", { locked = true })
 o.bind("SHIFT + XF86AudioPlay", "Switch media source", "omarchy-audio-source-switch", { locked = true })
 
--- Mac fork: screenshot binds on F-keys — Mac keyboards have no PRINT key, so
--- quattro's PRINT-based screenshot binds are dead keys on this hardware.
-o.bind("SUPER + F12", "Screenshot Display", "omarchy-capture-screenshot fullscreen")
-o.bind("SUPER + F11", "Screenshot Region", "omarchy-capture-screenshot region")
-o.bind("SUPER + F10", "Screenshot Window", "omarchy-capture-screenshot windows")
-
 -- Screen recording: SUPER+ALT+F12 mirrors the Display screenshot key. Starts a
 -- fullscreen recording and toggles off on the next press (no options menu).
 o.bind("SUPER + ALT + F12", "Screen recording Display", "omarchy-capture-screenrecording --fullscreen")
 
--- Apple keyboards emit media keys on the top row, so the F-key captures above
--- need Fn held. Bind the media keycodes too and the same presses work bare.
+-- Apple keyboards emit media keys on the top row, so the F-key screenshot
+-- binds in utilities.lua (SUPER + F10/F11/F12, Mac fork: Mac keyboards have
+-- no PRINT key) need Fn held. Bind the media keycodes too and the same
+-- presses work bare.
 o.bind("SUPER + XF86AudioMute", "Screenshot Window (Apple top row)", "omarchy-capture-screenshot windows")
 o.bind("SUPER + XF86AudioLowerVolume", "Screenshot Region (Apple top row)", "omarchy-capture-screenshot region")
 o.bind("SUPER + XF86AudioRaiseVolume", "Screenshot Display (Apple top row)", "omarchy-capture-screenshot fullscreen")

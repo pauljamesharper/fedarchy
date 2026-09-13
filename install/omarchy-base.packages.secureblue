@@ -1,10 +1,17 @@
-# secureblue package list for Omarchy quattro
+# Package list for Omarchy quattro on any OSTree/atomic Fedora target -
+# secureblue and plain atomic Fedora (Silverblue/Kinoite/Sericea, e.g.
+# "Fedora Atomic Sway") alike. The .secureblue filename predates this list
+# being shared across both; nothing in it is secureblue-specific (see
+# install/helpers/packages.sh, gated on is_ostree(), not is_secureblue()).
+# This user's own ~/dotfiles/Brewfile documents the same thing directly:
+# "Same list on Fedora Sway Atomic and secureblue."
+#
 # Format: one entry per line, `<tier>:<name>` or bare `<name>` (defaults to
 # system tier). Tiers:
-#   system  - rpm-ostree layer (run0). Default when no prefix is given.
-#             Right for anything that can't be sandboxed: compositor,
-#             portals, PAM/greeter/systemd-service-backed daemons, kernel
-#             modules, fonts (needed before any session/sandbox exists).
+#   system  - rpm-ostree layer. Default when no prefix is given. Right for
+#             anything that can't be sandboxed: compositor, portals,
+#             PAM/greeter/systemd-service-backed daemons, kernel modules,
+#             fonts (needed before any session/sandbox exists).
 #   gui:<flatpak-app-id>  - flatpak --user install. <name> is the Flatpak
 #             application ID, not the RPM name (they usually differ).
 #   cli:<brew-formula>    - brew install. <name> is the linuxbrew formula
@@ -18,7 +25,7 @@
 # maximally optimal. Revisit case-by-case later; nothing here is final.
 #
 # The Hyprland stack itself, portals, and the COPR it comes from are handled
-# the same as Fedora (see install/helpers/fedora-copr.sh's secureblue
+# the same as Fedora (see install/helpers/fedora-copr.sh's is_ostree
 # branch) - listed here as system tier like everything else that resolves
 # from a normal repo, dnf-copr-enabled or not.
 
@@ -136,11 +143,11 @@ mariadb-connector-c
 java-latest-openjdk
 dotnet-runtime-9.0
 
-# Containers - Docker deliberately NOT installed here: this user runs
-# podman instead (already part of the secureblue base image). See
-# install/config/docker.sh, enable-services.sh, firewall.sh, and
-# etc-files.sh, which all skip their Docker-specific steps on secureblue
-# for the same reason.
+# Containers - Docker deliberately NOT installed here: Fedora Atomic
+# Desktop images (secureblue and plain atomic Fedora alike) ship podman
+# instead. See install/config/docker.sh, enable-services.sh, firewall.sh,
+# and etc-files.sh, which all skip their Docker-specific steps on any
+# OSTree/atomic target for the same reason.
 
 # Media & Apps
 imv

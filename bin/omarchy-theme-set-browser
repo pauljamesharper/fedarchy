@@ -55,8 +55,12 @@ for pd in "${POLICY_DIRS[@]}"; do
   fi
 done
 
-# Refresh running browsers and set mode
-if omarchy-cmd-present chromium; then
+# Refresh running browsers and set mode. --version doubles as a cheap sanity
+# probe: some Fedora/secureblue configurations carry a native Chromium build
+# whose allocator init aborts before it can even print a version, and calling
+# --set-theme-color/--set-color-scheme on it would dump core on every theme
+# change instead of just silently doing nothing.
+if omarchy-cmd-present chromium && chromium --version >/dev/null 2>&1; then
   chromium --no-startup-window --set-theme-color="$THEME_RGB_COLOR"
   if [[ $MODE == "light" ]]; then
     chromium --no-startup-window --set-color-scheme="light"
@@ -66,12 +70,26 @@ if omarchy-cmd-present chromium; then
 fi
 
 # Fedora: mainline chromium package provides chromium-browser, not chromium
-if omarchy-cmd-present chromium-browser; then
+if omarchy-cmd-present chromium-browser && chromium-browser --version >/dev/null 2>&1; then
   chromium-browser --no-startup-window --set-theme-color="$THEME_RGB_COLOR"
   if [[ $MODE == "light" ]]; then
     chromium-browser --no-startup-window --set-color-scheme="light"
   else
     chromium-browser --no-startup-window --set-color-scheme="dark"
+  fi
+fi
+
+# Flatpak Chromium: the policy directories above already cover it, but the
+# live --set-theme-color/--set-color-scheme refresh still needs its own call
+# here - reached whenever the native package above is missing, broken, or
+# was never installed at all (the common case when Chromium came from
+# Flathub instead of the distro repos).
+if flatpak info --user org.chromium.Chromium >/dev/null 2>&1; then
+  flatpak run --command=/app/bin/chromium org.chromium.Chromium --no-startup-window --set-theme-color="$THEME_RGB_COLOR"
+  if [[ $MODE == "light" ]]; then
+    flatpak run --command=/app/bin/chromium org.chromium.Chromium --no-startup-window --set-color-scheme="light"
+  else
+    flatpak run --command=/app/bin/chromium org.chromium.Chromium --no-startup-window --set-color-scheme="dark"
   fi
 fi
 

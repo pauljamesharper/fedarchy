@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "omarchy.screenshot",
+  "name": "Screenshot",
+  "version": "1.0.0",
+  "author": "Omarchy",
+  "description": "Take a screenshot, right-click for the full capture menu",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Screenshot.qml"
+  },
+  "barWidget": {
+    "displayName": "Screenshot",
+    "description": "Take a screenshot, right-click for the full capture menu",
+    "category": "Utilities",
+    "allowMultiple": false
+  }
+}

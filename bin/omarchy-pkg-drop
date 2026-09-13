@@ -1,11 +1,17 @@
 #!/bin/bash
-
-# omarchy:summary=Remove all the named packages from the system if they're installed (otherwise ignore).
+# omarchy:summary=Remove packages with dnf
 # omarchy:args=<packages...>
-# omarchy:requires-sudo=true
+
+OMARCHY_INSTALL=${OMARCHY_INSTALL:-"$OMARCHY_PATH/install"}
+source "$OMARCHY_INSTALL/helpers/packages.sh"
 
 for pkg in "$@"; do
-  if rpm -q "$pkg" &>/dev/null; then
-    sudo dnf remove -y "$pkg"
+  omarchy_package_installed "$pkg" || continue
+
+  if ! omarchy_remove_package "$pkg"; then
+    echo -e "\033[31mError: Failed to remove $pkg\033[0m" >&2
+    exit 1
   fi
 done
+
+exit 0

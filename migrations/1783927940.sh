@@ -12,9 +12,9 @@ fedora_remove_dead_copr_repos
 # lionheartp is where Hyprland comes from now. Enabling it is idempotent.
 if [[ ! -f "$LIONHEARTP_REPO_FILE" ]]; then
   echo "[INFO] Enabling COPR repository: lionheartp/Hyprland"
-  sudo dnf copr enable -y lionheartp/Hyprland
+  _copr_escalate dnf copr enable -y lionheartp/Hyprland
 fi
 
 fedora_apply_copr_protections
 
-sudo dnf makecache --refresh >/dev/null || true
+_copr_escalate dnf makecache --refresh >/dev/null || true

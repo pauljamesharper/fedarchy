@@ -1,5 +1,12 @@
 echo "Ensure grub-btrfs is installed and GRUB snapshot entries are generated"
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+
+# OSTree/secureblue has its own atomic rollback via rpm-ostree; see
+# install-atomic.sh.
+is_ostree && exit 0
+
 if omarchy-cmd-missing grub2-mkconfig; then
   exit 0
 fi

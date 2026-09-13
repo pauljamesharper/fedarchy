@@ -4,6 +4,13 @@ echo "Reapply Fedora-specific grub-btrfs config and regenerate GRUB snapshot ent
 # the Fedora-specific config (GRUB_BTRFS_GRUB_DIRNAME, GRUB_BTRFS_MKCONFIG etc.)
 # was applied correctly, which caused GRUB snapshot entries to be missing.
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+
+# OSTree/secureblue has its own atomic rollback via rpm-ostree; see
+# install-atomic.sh.
+is_ostree && exit 0
+
 if omarchy-cmd-missing grub2-mkconfig; then
   exit 0
 fi

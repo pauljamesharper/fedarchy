@@ -19,9 +19,10 @@ fi
 # and leaves the apps missing. --user needs no such repository, and no sudo either.
 flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
-# 1. lazydocker - skipped entirely on secureblue: this user runs podman
-# instead, Docker (and its tooling) is deliberately not installed at all.
-if is_secureblue; then
+# 1. lazydocker - skipped entirely on any OSTree/atomic Fedora target
+# (secureblue and plain atomic alike): these images ship podman, not
+# Docker, and Docker (and its tooling) is deliberately not installed at all.
+if is_ostree; then
   :
 elif ! command -v lazydocker &>/dev/null; then
   echo "Installing lazydocker (GitHub binary)..."
@@ -56,9 +57,9 @@ if ! command -v tte &>/dev/null; then
   pip3 install --user terminaltexteffects
 fi
 
-# 3. mise (brew on secureblue - it's a plain CLI tool with a formula, no
-# reason to reach for its own curl|bash installer instead)
-if is_secureblue; then
+# 3. mise (brew on any OSTree/atomic target - it's a plain CLI tool with a
+# formula, no reason to reach for its own curl|bash installer instead)
+if is_ostree; then
   if ! command -v mise &>/dev/null; then
     echo "Installing mise (brew)..."
     command -v brew &>/dev/null && brew install mise
@@ -113,10 +114,11 @@ if ! fc-list 2>/dev/null | grep -qi "JetBrainsMono Nerd Font"; then
 fi
 
 # 6b. starship (fallback if package install missed it - base.sh already
-# installs it via brew on secureblue, see omarchy-base.packages.secureblue)
+# installs it via brew on any OSTree/atomic target, see
+# omarchy-base.packages.secureblue)
 if ! command -v starship &>/dev/null; then
   echo "Installing starship (fallback path)..."
-  if is_secureblue; then
+  if is_ostree; then
     command -v brew &>/dev/null && brew install starship
   elif dnf list --available starship &>/dev/null; then
     sudo dnf install -y starship || true
@@ -127,9 +129,10 @@ if ! command -v starship &>/dev/null; then
   fi
 fi
 
-# 6c. eza (optional - base.sh already installs it via brew on secureblue)
+# 6c. eza (optional - base.sh already installs it via brew on any
+# OSTree/atomic target)
 if ! command -v eza &>/dev/null; then
-  if is_secureblue; then
+  if is_ostree; then
     echo "Installing eza (optional)..."
     command -v brew &>/dev/null && brew install eza
   elif dnf list --available eza &>/dev/null; then

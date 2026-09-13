@@ -5,10 +5,12 @@
 # left exactly as it was.
 #
 # This fork originally targeted Fedora Asahi Remix on aarch64 (Apple Silicon)
-# only. It also now supports secureblue (OSTree/rpm-ostree, run0 instead of
-# sudo) on x86_64 - the aarch64-only and Asahi-kernel checks that used to be
-# here applied only to the Apple Silicon path and are gone; every other
-# check (Fedora, Fedora 44+, not root) applies to both targets unchanged.
+# only. It also now supports any OSTree/atomic Fedora on x86_64 - secureblue
+# (run0 instead of sudo) and plain atomic Fedora (Silverblue/Kinoite/Sericea,
+# sudo like install.sh) alike - the aarch64-only and Asahi-kernel checks that
+# used to be here applied only to the Apple Silicon path and are gone; every
+# other check (Fedora, Fedora 44+, not root) applies to all three targets
+# unchanged.
 
 source "${OMARCHY_INSTALL:-$HOME/.local/share/omarchy/install}/helpers/distro.sh"
 source "${OMARCHY_INSTALL:-$HOME/.local/share/omarchy/install}/helpers/distro-secureblue.sh"
@@ -32,6 +34,8 @@ fi
 
 if is_secureblue; then
   echo "Guards: secureblue detected - privilege escalation is run0, packages route through rpm-ostree/flatpak/brew."
+elif is_ostree; then
+  echo "Guards: atomic Fedora detected - privilege escalation is sudo, packages route through rpm-ostree/flatpak/brew."
 fi
 
 # install.sh escalates with sudo/run0 where it needs to; running the whole

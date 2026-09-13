@@ -2,6 +2,10 @@ echo "Take ownership of the FIDO2 authfile so it cannot be rewritten without roo
 
 authfile="/etc/fido2/fido2"
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+if is_secureblue; then ESC=run0; else ESC=sudo; fi
+
 # omarchy-migrate records this migration as complete whenever it exits zero, so
 # a line printed here scrolls past once in the update terminal and is never
 # shown again. The states below cannot be repaired without deciding what to do
@@ -35,11 +39,11 @@ if [[ ! -L $authfile && ! -e $authfile ]]; then
   # itself. An aborted setup that left an empty 0700 directory, or one an
   # administrator deliberately keeps private, must not have its mode widened
   # and its group and special bits discarded for a repair it does not need.
-  if ! sudo test -e "$authfile" && ! sudo test -L "$authfile"; then
+  if ! $ESC test -e "$authfile" && ! $ESC test -L "$authfile"; then
     exit 0
   fi
 
-  sudo chmod 755 "$authdir"
+  $ESC chmod 755 "$authdir"
 fi
 
 # The old privileged move could install a symlink here if its fixed staging path
@@ -96,21 +100,21 @@ cleanup_stage() {
   local status=$?
 
   if safe_stage_path "$stage"; then
-    sudo rm -f -- "$stage" || true
+    $ESC rm -f -- "$stage" || true
   fi
 
   return "$status"
 }
 
 trap cleanup_stage EXIT
-stage=$(sudo mktemp "$authfile.new.XXXXXX")
+stage=$($ESC mktemp "$authfile.new.XXXXXX")
 
 if ! safe_stage_path "$stage" || [[ ! -f $stage || -L $stage ]]; then
   echo "  Could not create a safe staging file beside $authfile."
   exit 1
 fi
 
-sudo install -T -m 644 -o root -g root "$authfile" "$stage"
-sudo mv -Tf "$stage" "$authfile"
+$ESC install -T -m 644 -o root -g root "$authfile" "$stage"
+$ESC mv -Tf "$stage" "$authfile"
 stage=""
 trap - EXIT

@@ -4,6 +4,8 @@
 # omarchy:args=[url]
 desktop_paths=(
   "$HOME/.local/share/applications"
+  "$HOME/.local/share/flatpak/exports/share/applications"
+  "/var/lib/flatpak/exports/share/applications"
   "$HOME/.nix-profile/share/applications"
   "/usr/local/share/applications"
   "/usr/share/applications"
@@ -22,6 +24,14 @@ resolve_desktop_file() {
   return 1
 }
 
+# Returns the whole Exec= command line, not just its first word. A native
+# entry's "Exec=chromium-browser %U" only ever had one word to begin with, but
+# a Flatpak app's "Exec=/usr/bin/flatpak run --branch=... --command=... org.some.App %U"
+# does not: truncating to the first token throws away everything after
+# /usr/bin/flatpak, leaving nothing that actually launches the app. Field
+# codes (%f/%F/%u/%U/%i/%c/%k) and Flatpak's "@@u ... @@" file-forwarding
+# wrapper are for a desktop-file-aware launcher to substitute; stripped here
+# since this script passes its own args instead.
 resolve_exec() {
   local desktop_id="$1"
   local file
@@ -29,7 +39,8 @@ resolve_exec() {
 
   file="$(resolve_desktop_file "$desktop_id")" || return 1
   exec_line="$(sed -n 's/^Exec=//p' "$file" | head -n1)"
-  exec_line="${exec_line%% *}"
+  exec_line="$(sed -E 's/@@[^@]*@@//g; s/%[fFuUick]//g' <<<"$exec_line")"
+  exec_line="$(sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//; s/[[:space:]]+/ /g' <<<"$exec_line")"
   [[ -n "$exec_line" ]] || return 1
   printf "%s\n" "$exec_line"
 }
@@ -47,10 +58,15 @@ pick_desktop_id() {
   for candidate in \
     chromium-browser.desktop \
     chromium.desktop \
+    org.chromium.Chromium.desktop \
     google-chrome.desktop \
+    com.google.Chrome.desktop \
     brave-browser.desktop \
+    com.brave.Browser.desktop \
     microsoft-edge.desktop \
+    com.microsoft.Edge.desktop \
     vivaldi-stable.desktop \
+    com.vivaldi.Vivaldi.desktop \
     org.mozilla.firefox.desktop \
     firefox.desktop; do
     if resolve_desktop_file "$candidate" >/dev/null; then
@@ -88,13 +104,36 @@ if [[ -z "$browser_exec" ]]; then
 fi
 
 if [[ -z "$browser_exec" ]]; then
+  # Flatpak may know the app even when no .desktop file resolved (a broken or
+  # incomplete export). --command matches how the desktop files above launch
+  # each app's actual binary rather than its default (which for Chromium is a
+  # wrapper that behaves differently under file-forwarding).
+  for app_id_pair in \
+    "org.chromium.Chromium:/app/bin/chromium" \
+    "org.mozilla.firefox:firefox" \
+    "com.google.Chrome:chrome" \
+    "com.brave.Browser:brave" \
+    "com.microsoft.Edge:msedge" \
+    "com.vivaldi.Vivaldi:vivaldi-bin"; do
+    app_id="${app_id_pair%%:*}"
+    app_command="${app_id_pair#*:}"
+    if flatpak info --user "$app_id" >/dev/null 2>&1 || flatpak info "$app_id" >/dev/null 2>&1; then
+      browser_exec="flatpak run --command=$app_command $app_id"
+      break
+    fi
+  done
+fi
+
+if [[ -z "$browser_exec" ]]; then
   notify-send "Browser" "No supported browser found. Install Firefox or Chromium."
   exit 1
 fi
 
-if $browser_exec --help | grep -q MOZ_LOG; then
+read -r -a browser_exec_args <<<"$browser_exec"
+
+if [[ $browser_exec == *firefox* ]]; then
   private_flag="--private-window"
-elif [[ $browser_exec =~ edge ]]; then
+elif [[ $browser_exec == *edge* ]]; then
   private_flag="--inprivate"
 else
   private_flag="--incognito"
@@ -104,4 +143,4 @@ if [[ "$want_private" == true ]]; then
   pass_args=("$private_flag" "${pass_args[@]}")
 fi
 
-exec setsid uwsm-app -- "$browser_exec" "${pass_args[@]}"
+exec setsid uwsm-app -- "${browser_exec_args[@]}" "${pass_args[@]}"

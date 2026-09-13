@@ -10,7 +10,7 @@ echo "[Omarchy] Setting up console font for TTY..."
 
 if ! command -v setfont &>/dev/null; then
   echo "[Omarchy] Installing kbd package..."
-  if is_secureblue; then
+  if is_ostree; then
     rpm-ostree install --idempotent -y kbd
   else
     sudo dnf install -y kbd

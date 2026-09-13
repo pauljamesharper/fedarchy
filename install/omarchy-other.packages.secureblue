@@ -1,4 +1,7 @@
-# secureblue optional/build package list for Omarchy quattro
+# Optional/build package list for Omarchy quattro on any OSTree/atomic
+# Fedora target - secureblue and plain atomic Fedora alike (see
+# omarchy-base.packages.secureblue's header for why the .secureblue
+# filename no longer means secureblue-only).
 # Format: one package name per line - system tier (rpm-ostree) only. Unlike
 # omarchy-base.packages.secureblue this file carries no gui:/cli: entries;
 # everything here is either a runtime shared library the desktop session
@@ -8,9 +11,9 @@
 # @development-tools (the dnf group) has no rpm-ostree @group syntax to
 # resolve it against, so it's spelled out below as an explicit package list
 # (a hand-picked approximation of Fedora's "Development Tools" comps group -
-# dnf itself can't be queried for the exact current membership here without
-# a writable /etc/yum.repos.d, see the secureblue branch of
-# install/helpers/fedora-copr.sh for the same access issue).
+# there is no host dnf to query for the exact current membership on any
+# OSTree/atomic Fedora target, confirmed empirically, see the is_ostree
+# branch of install/helpers/fedora-copr.sh for the same underlying fact).
 #
 # This intentionally does NOT live in a toolbox instead: fedora-manual.sh's
 # starship/eza cargo fallbacks (`cargo install --locked ...`) compile from

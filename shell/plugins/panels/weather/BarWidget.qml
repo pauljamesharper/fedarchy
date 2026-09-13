@@ -69,7 +69,9 @@ BarWidget {
     anchors.fill: parent
     bar: root.bar
     text: panelLoader.item ? panelLoader.item.label : ""
-    slotSize: Style.bar.statusSlot
+    slotSize: Style.bar.statusSlot + 16
+    opticalSize: Style.bar.iconCanvas + 16
+    fontSize: Style.bar.iconFont + 14
     // Tooltip suppressed because the panel is the detail view.
     tooltipText: ""
 

@@ -45,9 +45,10 @@ install_etc systemd/user.conf.d/20-omarchy-nofile.conf
 
 # docker/daemon.json, systemd/resolved.conf.d/20-docker-dns.conf, and
 # systemd/system/docker.service.d/no-block-boot.conf all NOT installed on
-# secureblue: this user runs podman instead, Docker isn't installed at all
-# here (see omarchy-base.packages.secureblue's Containers section).
-if ! is_secureblue; then
+# any OSTree/atomic Fedora target (secureblue and plain atomic alike):
+# these images ship podman instead, Docker isn't installed at all there
+# (see omarchy-base.packages.secureblue's Containers section).
+if ! is_ostree; then
   install_etc docker/daemon.json
   install_etc systemd/resolved.conf.d/20-docker-dns.conf
   install_etc systemd/system/docker.service.d/no-block-boot.conf
@@ -68,6 +69,19 @@ else
       echo "[etc-files] WARNING: /etc/sudoers.d/$name failed visudo -c and was removed"
     fi
   done
+
+  # omarchy-dns re-execs itself under sudo at a fixed path (see bin/omarchy-dns)
+  # rather than the caller's PATH, so the grant matches regardless of which
+  # copy invoked it. No Fedora package installs a real copy at /usr/bin yet,
+  # so rewrite it to $OMARCHY_PATH/bin, the same way the udev rules below do.
+  staged_dns_sudoers=$(mktemp)
+  sed "s|/usr/bin/omarchy-|$OMARCHY_PATH/bin/omarchy-|g" "$omarchy_etc/sudoers.d/omarchy-dns" >"$staged_dns_sudoers"
+  install -Dm440 "$staged_dns_sudoers" "/etc/sudoers.d/omarchy-dns"
+  rm -f "$staged_dns_sudoers"
+  if ! visudo -cf "/etc/sudoers.d/omarchy-dns" >/dev/null; then
+    rm -f "/etc/sudoers.d/omarchy-dns"
+    echo "[etc-files] WARNING: /etc/sudoers.d/omarchy-dns failed visudo -c and was removed"
+  fi
 fi
 
 # The udev rules run omarchy commands from the Arch package path; rewrite them

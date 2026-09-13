@@ -9,8 +9,12 @@ modinfo appledrm &>/dev/null || exit 0
 unit=/etc/systemd/system/omarchy-seamless-login.service
 [[ -f $unit ]] || exit 0 # seamless-login not installed on this machine
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+if is_secureblue; then ESC=run0; else ESC=sudo; fi
+
 # Install the wait helper (idempotent — always refresh to latest content).
-sudo tee /usr/local/bin/omarchy-wait-for-display >/dev/null <<'WAITEOF'
+$ESC tee /usr/local/bin/omarchy-wait-for-display >/dev/null <<'WAITEOF'
 #!/bin/bash
 # Wait for the real KMS display driver (apple-drm) to replace the early
 # simpledrm boot framebuffer before the Wayland compositor starts. simpledrm is
@@ -28,15 +32,15 @@ for _ in $(seq 1 150); do
 done
 exit 0
 WAITEOF
-sudo chmod +x /usr/local/bin/omarchy-wait-for-display
+$ESC chmod +x /usr/local/bin/omarchy-wait-for-display
 
 # Add ExecStartPre via drop-in, unless the base unit already has it (fresh installs).
 if ! grep -q omarchy-wait-for-display "$unit"; then
   dropin=/etc/systemd/system/omarchy-seamless-login.service.d
-  sudo mkdir -p "$dropin"
-  sudo tee "$dropin/wait-for-display.conf" >/dev/null <<'DROPEOF'
+  $ESC mkdir -p "$dropin"
+  $ESC tee "$dropin/wait-for-display.conf" >/dev/null <<'DROPEOF'
 [Service]
 ExecStartPre=/usr/local/bin/omarchy-wait-for-display
 DROPEOF
-  sudo systemctl daemon-reload
+  $ESC systemctl daemon-reload
 fi

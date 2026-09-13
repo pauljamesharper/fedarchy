@@ -12,12 +12,16 @@ echo "Gate sudo and polkit fingerprint auth behind the lid state (password when 
 # overlays $OMARCHY_PATH but leaves /usr/bin untouched). pam_exec needs a
 # literal absolute path — it does not expand env vars.
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+if is_secureblue; then ESC=run0; else ESC=sudo; fi
+
 gate="auth      [success=1 default=ignore] pam_exec.so quiet /usr/bin/omarchy-hw-laptop-closed"
 
 for pam in /etc/pam.d/sudo /etc/pam.d/polkit-1; do
   if [[ -f $pam ]] &&
     grep -q 'pam_fprintd\.so' "$pam" &&
     ! grep -q 'omarchy-hw-laptop-closed' "$pam"; then
-    sudo sed -i "/pam_fprintd\.so/i $gate" "$pam"
+    $ESC sed -i "/pam_fprintd\.so/i $gate" "$pam"
   fi
 done

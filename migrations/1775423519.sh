@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # Install nautilus-python and deploy LocalSend extension for Nautilus context menu
 # Also ensures LocalSend Flatpak is installed via Flathub
 
@@ -13,7 +12,7 @@ if ! command -v localsend &>/dev/null && ! flatpak info org.localsend.localsend_
 fi
 
 if ! rpm -q nautilus-python >/dev/null 2>&1; then
-  sudo dnf install -y nautilus-python
+  omarchy-pkg-add nautilus-python
 fi
 
 EXTENSIONS_DIR="$HOME/.local/share/nautilus-python/extensions"

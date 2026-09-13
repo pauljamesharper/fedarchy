@@ -1,7 +1,7 @@
 echo "Enable Walker file search and calculator (install qalculate + create qalc.cfg)"
 
 if ! rpm -q libqalculate >/dev/null 2>&1; then
-  sudo dnf install -y libqalculate qalculate
+  omarchy-pkg-add libqalculate qalculate
 fi
 
 mkdir -p ~/.config/qalculate

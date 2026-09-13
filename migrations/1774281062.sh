@@ -8,4 +8,4 @@ if omarchy-pkg-missing fuzzel; then
   exit 0
 fi
 
-sudo dnf remove -y fuzzel
+omarchy-pkg-drop fuzzel

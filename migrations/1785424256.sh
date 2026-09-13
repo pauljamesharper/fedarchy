@@ -4,9 +4,14 @@ echo "Let systemd-oomd kill a runaway app instead of the whole session"
 # have never had an OOM daemon, so nothing stands between memory pressure and
 # the session falling over.
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+
 as_root() {
   if (( EUID == 0 )); then
     "$@"
+  elif is_secureblue; then
+    run0 "$@"
   else
     sudo "$@"
   fi

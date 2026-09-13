@@ -1,5 +1,13 @@
 echo "Install grub-btrfs from source and enable snapshot entries in GRUB on Fedora Btrfs systems"
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+
+# OSTree/secureblue has its own atomic rollback via rpm-ostree - see
+# install-atomic.sh, which deliberately never wires up btrfs-snapper.sh /
+# grub-btrfs.sh on OSTree targets.
+is_ostree && exit 0
+
 if omarchy-cmd-missing grub2-mkconfig; then
   exit 0
 fi

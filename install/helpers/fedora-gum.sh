@@ -9,10 +9,11 @@ if command -v gum &>/dev/null; then
   exit 0
 fi
 
-if is_secureblue; then
+if is_ostree; then
   # gum is a cli-tier package here (see omarchy-base.packages.secureblue) -
-  # brew, not dnf/rpm-ostree, and definitely not a system-level layer just
-  # to render the installer's own UI.
+  # brew, not dnf/rpm-ostree, since rpm-ostree layering only takes effect
+  # next boot and gum has to render the installer's own UI *this* boot, on
+  # any OSTree/atomic Fedora target (secureblue or plain atomic alike).
   echo "[Omarchy] Installing gum (brew)..."
   if command -v brew &>/dev/null && brew install gum; then
     exit 0

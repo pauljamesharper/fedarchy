@@ -1,5 +1,15 @@
 echo "Set up snapper configs, retention policy, timers, and install btrfs-assistant"
 
+OMARCHY_INSTALL="${OMARCHY_INSTALL:-$OMARCHY_PATH/install}"
+source "$OMARCHY_INSTALL/helpers/distro-secureblue.sh"
+
+# OSTree/secureblue has its own atomic rollback via rpm-ostree - see
+# install-atomic.sh, which deliberately never wires up btrfs-snapper.sh /
+# grub-btrfs.sh on OSTree targets. snapper is never installed there, so this
+# is already unreachable in practice; guarded explicitly in case that ever
+# changes for unrelated reasons.
+is_ostree && exit 0
+
 if omarchy-cmd-missing snapper; then
   exit 0
 fi

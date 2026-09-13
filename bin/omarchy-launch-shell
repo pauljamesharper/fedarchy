@@ -15,8 +15,10 @@
 # against a half-written tree, and that failed reload leaves a second engine
 # generation behind that turns the next restart's IPC kill into a crash.
 run_shell() {
+  # hardened_malloc (secureblue's default LD_PRELOAD) reliably segfaults
+  # Quickshell's threaded Qt Quick renderer here; run without it.
   QS_DISABLE_FILE_WATCHER=1 QS_NO_RELOAD_POPUP=1 \
-    systemd-cat -t omarchy-shell -- quickshell -n -p "$OMARCHY_PATH/shell" &
+    env -u LD_PRELOAD systemd-cat -t omarchy-shell -- quickshell -n -p "$OMARCHY_PATH/shell" &
   shell_pid=$!
 
   local status
