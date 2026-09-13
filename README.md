@@ -12,6 +12,8 @@ image's stability: `rpm-ostree` deployments mean a bad update is a reboot away f
 and the base system stays read-only and reproducible instead of drifting under ad-hoc package
 installs.
 
+![Desktop screenshot](images/screenshot-desktop.png)
+
 > ### ⚠️ Unofficial
 > This is an unofficial, community-maintained fork. It is not affiliated with, endorsed by, or
 > supported by DHH, the Omarchy project, Fedora, secureblue, or Universal Blue. It touches
@@ -117,6 +119,23 @@ wrong tool on a variant this hasn't been tested against yet.
 - Validate core desktop behavior: app launcher opens, terminal keybind works, Wi-Fi/Bluetooth menus open, and lock screen works.
 - Try a theme — extra themes install from any git repo with `omarchy theme install <url>`, e.g. DHH's own
   [Giants theme](https://github.com/dhh/omarchy-giants-theme): `omarchy theme install https://github.com/dhh/omarchy-giants-theme.git`.
+
+### Installing plugins from Omarchy Plugins
+
+![Omarchy Plugins marketplace](images/screenshot-plugin.png)
+
+Shell plugins (bar widgets, VPN toggles, and the like) come from git repos, and
+[plugins.omarchy.org](https://plugins.omarchy.org/) is the community registry for finding them. Browse or
+search there, open a plugin's page, and copy its git URL, then:
+
+```bash
+omarchy plugin add <git-url> --enable
+```
+
+`--enable` turns it on right after cloning instead of leaving it installed-but-inactive; add `--yes`
+too if you want to skip the "you're about to run someone else's code" confirmation (non-interactive
+shells require it). Installed plugins show up in `Menu > Plugin`, where they can be enabled,
+disabled, or removed without touching the command line again.
 
 ## Troubleshooting and FAQ
 
