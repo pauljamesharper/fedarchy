@@ -149,6 +149,7 @@ BarWidget {
     bar: root.bar
     text: root.vertical ? "" : root.displayText
     labelVisible: !root.vertical
+    fontSize: Style.font.iconLarge
     hasVisualContent: root.vertical ? root.verticalLines.length > 0 : text !== ""
     fixedHeight: root.vertical ? root.verticalLines.length * Style.bar.iconSlot : -1
     horizontalMargin: 8.75

@@ -126,6 +126,7 @@ BarWidget {
     anchors.fill: parent
     bar: root.bar
     text: root.displayText
+    fontSize: Style.font.caption * 2
     active: !root.idle && !root.onBreak
     dimmed: root.isPaused
     tooltipText: root.idle
