@@ -28,6 +28,13 @@ nvim | vim | nano | micro | hx | helix | fresh)
     exec omarchy-launch-tui "$editor" "$@"
   fi
   ;;
+emacs)
+  # Attach to the emacs.service daemon instead of cold-starting a second,
+  # standalone Emacs; -a falls back to a plain `emacs` if no daemon is
+  # reachable. -u LD_PRELOAD sidesteps secureblue's hardened_malloc, which
+  # segfaults a cold-started GUI frame; it's a no-op elsewhere.
+  exec setsid uwsm-app -- env -u LD_PRELOAD emacsclient -c -a emacs "$@"
+  ;;
 *)
   exec setsid uwsm-app -- "$editor" "$@"
   ;;
