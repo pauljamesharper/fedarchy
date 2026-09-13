@@ -1,8 +1,11 @@
-# Fedarchy — Quattro
+# Fedora Omarchy Atomic Respin
 
-Omarchy (DHH's Hyprland desktop) ported to Fedora. Built and used on **secureblue** — hardened,
-immutable Fedora Atomic built on Fedora Sway Atomic (`rpm-ostree`, no `sudo`, only `run0`) — and it
-should also work on plain **Fedora Sway Atomic** / Silverblue / Kinoite.
+Omarchy (DHH's Hyprland desktop) ported to Fedora. Started from plain **Fedora Sway Atomic** and
+built out from there, so that's the best-exercised target — but it's all standard `rpm-ostree`
+underneath, so it should work the same way on any Fedora Atomic spin (Silverblue, Kinoite) or
+Universal Blue image, **secureblue** included. secureblue's hardening removes `sudo` in favor of
+`run0` and shadows the host `dnf`, so it needs a handful of extra steps beyond the base install —
+see below.
 
 > ### 🆕 This is Omarchy "Quattro"
 > This branch tracks **Omarchy quattro** — a major rework of the desktop. The bar, launcher,
@@ -25,17 +28,17 @@ _This project is an extension of [Omarchy Mac](https://github.com/malik-na/omarc
 
 ---
 
-## Set up on secureblue
+## Set up on Fedora Atomic
 
-This assumes you already have a running secureblue system (any variant — Sway, GNOME, KDE) with
-accounts, hostname, locale, and timezone already configured; see https://secureblue.dev/ if you
-still need to install secureblue itself first. `install-atomic.sh` only installs the Omarchy
-desktop (Hyprland + Quickshell) on top of what's already there.
+This assumes you already have a running Fedora Atomic system — Fedora Sway Atomic, Silverblue,
+Kinoite, or a Universal Blue image such as secureblue — with accounts, hostname, locale, and
+timezone already configured. `install-atomic.sh` only installs the Omarchy desktop (Hyprland +
+Quickshell) on top of what's already there.
 
 Requirements:
 
-- secureblue (x86_64), any desktop variant
-- Fedora 44 or newer underneath (secureblue tracks current Fedora; check with `cat /etc/os-release`)
+- Fedora Atomic (Sway Atomic, Silverblue, Kinoite) or a Universal Blue image (secureblue, etc.), x86_64
+- Fedora 44 or newer underneath (check with `cat /etc/os-release`)
 - A regular user, not root — the installer escalates privilege itself when it needs to
 - Internet connectivity
 - `git` installed
@@ -48,20 +51,27 @@ cd ~/.local/share/omarchy
 bash install-atomic.sh
 ```
 
-A few things that behave differently here than on a normal Fedora install, because secureblue has
-no `sudo` (only `run0`) and no host `dnf` (packages route through `rpm-ostree`/flatpak/brew):
+**Plan on running the installer twice, with a reboot in between**, regardless of which Fedora
+Atomic variant you're on. `rpm-ostree` layers a package (like `hyprland-uwsm`) for the *next* boot,
+not the current one, so the first pass can't actually finish setting up Hyprland. The installer is
+written to be safely re-run: it skips anything already done and picks up where it left off. Run
+it, reboot when it says so, then run `bash install-atomic.sh` again from the same directory. Once
+`hyprland-uwsm` shows up as a session option at the SDDM login screen, you're done — your previous
+session (e.g. Sway) is untouched and still selectable if something's wrong. The full transcript is
+logged to `/var/log/omarchy-install.log` if you need to check what a step actually did.
+
+### Extra steps on secureblue
+
+secureblue's hardening removes `sudo` (only `run0` is available) and shadows the host `dnf`
+(packages route through `rpm-ostree`/flatpak/brew instead). The installer already detects this
+(`is_secureblue` in `install/helpers/distro-secureblue.sh`) and switches its privilege-escalation
+and package calls accordingly, but two things are worth knowing going in:
 
 - **You'll be prompted by `run0`/polkit repeatedly.** Unlike `sudo`, `run0` has no auth cache — every
   privileged step in the installer asks again. That's expected.
-- **Plan on running the installer twice, with a reboot in between.** `rpm-ostree` layers a package
-  (like `hyprland-uwsm`) for the *next* boot, not the current one, so the first pass can't actually
-  finish setting up Hyprland. The installer is written to be safely re-run: it skips anything already
-  done and picks up where it left off. Run it, reboot when it says so, then run
-  `bash install-atomic.sh` again from the same directory. Once `hyprland-uwsm` shows up as a session
-  option at the SDDM login screen, you're done — your previous session (e.g. Sway) is untouched and
-  still selectable if something's wrong.
-- **The full transcript is logged** to `/var/log/omarchy-install.log` if you need to check what a
-  step actually did.
+- **secureblue's own setup should already be done first** — accounts, hostname, locale, timezone,
+  and the secureblue image itself; see https://secureblue.dev/. `install-atomic.sh` only adds the
+  Omarchy desktop on top of an already-running secureblue system.
 
 ### The post-install step
 
@@ -76,16 +86,14 @@ Near the end of each pass, the installer runs two small root-context scripts und
 
 Both are idempotent and safe to run on every pass, including the repeat run after rebooting.
 
-### Fedora Sway Atomic (plain atomic Fedora)
+### Other Fedora Atomic spins and Universal Blue images
 
-The same `install-atomic.sh` entry point should also work on plain atomic Fedora spins that aren't
-secureblue-hardened — Fedora Sway Atomic, Silverblue, Kinoite. It already detects this
-automatically (`is_secureblue`/`is_ostree` in `install/helpers/distro-secureblue.sh`) and switches
-from `run0` to a normal `sudo` prompt-once-then-keepalive flow — the same approach `install.sh`
-uses on mutable Fedora — so no manual editing between `sudo` and `run0` should be needed. That said,
-this fork has mainly been exercised on secureblue itself; treat the plain-atomic-Fedora branch as
-probably-working-but-less-proven until confirmed on your own machine, and if privilege escalation
-ever picks the wrong tool, `install/helpers/distro-secureblue.sh` is where that decision is made.
+Plain Fedora Sway Atomic is this project's primary, best-exercised target. The same
+`install-atomic.sh` entry point should work unchanged on Silverblue, Kinoite, and Universal Blue
+images generally — it's all the same `rpm-ostree` underneath. `install/helpers/distro-secureblue.sh`
+is where `is_secureblue`/`is_ostree` detection happens and where privilege escalation (`sudo` vs.
+`run0`) and package routing get decided; that's the file to check first if something picks the
+wrong tool on a variant this hasn't been tested against yet.
 
 ---
 
@@ -96,6 +104,8 @@ ever picks the wrong tool, `install/helpers/distro-secureblue.sh` is where that 
 - Reboot and log into your Hyprland session.
 - Press `Cmd + K`  to learn all the Keybindings. 
 - Validate core desktop behavior: app launcher opens, terminal keybind works, Wi-Fi/Bluetooth menus open, and lock screen works.
+- Try a theme — extra themes install from any git repo with `omarchy theme install <url>`, e.g. DHH's own
+  [Giants theme](https://github.com/dhh/omarchy-giants-theme): `omarchy theme install https://github.com/dhh/omarchy-giants-theme.git`.
 
 ## Troubleshooting and FAQ
 
