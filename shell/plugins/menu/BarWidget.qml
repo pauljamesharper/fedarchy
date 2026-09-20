@@ -1,4 +1,5 @@
 import QtQuick
+import qs.Commons
 import qs.Ui
 
 BarWidget {
@@ -12,8 +13,9 @@ BarWidget {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: "\ue900"
-    fontFamily: "omarchy"
+    text: "\uf30a"
+    fontFamily: Style.font.family
+    fontSize: Style.font.iconLarge + 3
     horizontalMargin: 7.5
     onPressed: function(button) {
       if (!root.bar) return
