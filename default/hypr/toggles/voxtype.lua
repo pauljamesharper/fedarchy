@@ -1,0 +1,7 @@
+-- Voxtype's F9 / Super+Ctrl+X bindings (default/hypr/bindings/voxtype.lua)
+-- activate on their own whenever the `voxtype` binary is present -- they
+-- don't depend on this flag. This file exists only so that
+-- `omarchy-hyprland-toggle voxtype on` (called by omarchy-voxtype-install)
+-- has a source file to copy; without one, `on()` in omarchy-hyprland-toggle
+-- prints "Flag not found" and exits 1, aborting the installer under `set -e`
+-- before it gets to restart the shell or send the completion notification.
