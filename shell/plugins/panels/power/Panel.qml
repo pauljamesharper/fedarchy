@@ -280,6 +280,7 @@ Panel {
     text: root.showPercentage && !vertical
       ? Math.round(root.batteryFraction * 100) + "% " + root.batteryIcon()
       : root.batteryIcon()
+    fontSize: root.showPercentage && !vertical ? Style.font.iconLarge : Style.bar.iconFont
     slotSize: Style.bar.iconSlot * (root.showPercentage && !vertical ? 2 : 1)
     tooltipText: ""
     onPressed: function(b) {
