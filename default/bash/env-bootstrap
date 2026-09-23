@@ -38,4 +38,11 @@ case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;
   *) PATH="${PATH:+$PATH:}$HOME/.local/bin" ;;
 esac
+# Homebrew is the CLI tier on atomic Fedora (install/helpers/fedora-brew.sh).
+if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+  case ":$PATH:" in
+    *":/home/linuxbrew/.linuxbrew/bin:"*) ;;
+    *) PATH="${PATH:+$PATH:}/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" ;;
+  esac
+fi
 export PATH

@@ -66,6 +66,10 @@ if is_secureblue && ! command -v run0 &>/dev/null; then
   exit 1
 fi
 
+bash "$OMARCHY_INSTALL/helpers/fedora-brew.sh" || exit 1
+# Every later step (gum just below, the cli: tier in packaging/) runs in a
+# child of this shell, so putting brew on PATH once here covers them all.
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"
 bash "$OMARCHY_INSTALL/helpers/fedora-gum.sh"
 
 source "$OMARCHY_INSTALL/helpers/presentation.sh"
