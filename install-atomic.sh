@@ -218,6 +218,12 @@ abort_install() {
   declare -F stop_log_output >/dev/null && stop_log_output
   printf "%b" "$ANSI_SHOW_CURSOR"
   echo "❌ Install failed at: $1 (see $OMARCHY_INSTALL_LOG_FILE)" >&2
+  # On plain atomic Fedora each step's output only goes to the log file, so
+  # show the tail here - otherwise the actual rpm-ostree error is invisible.
+  if ! omarchy_log_to_stdout; then
+    echo >&2
+    tail -n 30 "$OMARCHY_INSTALL_LOG_FILE" >&2
+  fi
   exit 1
 }
 
@@ -239,7 +245,7 @@ fi
 run_user "$OMARCHY_INSTALL/helpers/fedora-copr.sh" || abort_install "helpers/fedora-copr.sh (COPR setup)"
 
 # --- Packaging ---------------------------------------------------------------
-run_user "$OMARCHY_INSTALL/helpers/fedora-hyprland.sh"
+run_user "$OMARCHY_INSTALL/helpers/fedora-hyprland.sh" || abort_install "helpers/fedora-hyprland.sh (Hyprland core)"
 run_user "$OMARCHY_INSTALL/packaging/base.sh"
 run_user "$OMARCHY_INSTALL/packaging/other.sh"
 run_user "$OMARCHY_INSTALL/packaging/fonts.sh"
@@ -315,17 +321,40 @@ fi
 
 printf "%b" "$ANSI_SHOW_CURSOR"
 
+# Report where Hyprland actually stands instead of always telling the user
+# to reboot and re-run: that advice loops forever when the compositor was
+# never queued in the first place.
+hyprland_session_installed() {
+  [[ -f /usr/share/wayland-sessions/hyprland-uwsm.desktop || -f /usr/share/wayland-sessions/hyprland.desktop ]]
+}
+
+rpm-ostree status --pending-exit-77 >/dev/null 2>&1
+pending_status=$?
+
 echo
 echo "=========================================================================="
-echo " First pass complete."
-echo
-echo " If this is the first time hyprland/hyprland-uwsm were installed above,"
-echo " that package is only layered for the *next* boot - rpm-ostree needs a"
-echo " reboot before the binary actually exists. Re-run this script after"
-echo " rebooting: already-installed packages are skipped automatically, and"
-echo " it will pick up from wherever this run left off."
-echo
-echo " Once hyprland-uwsm shows up at the SDDM login screen, log in there."
-echo " Your existing Sway session is untouched and still selectable if"
-echo " something's wrong."
+if hyprland_session_installed; then
+  echo " Install complete - Hyprland is installed in the running deployment."
+  echo
+  echo " Log out and pick the Hyprland (uwsm) session at the SDDM login screen."
+  if ((pending_status == 77)); then
+    echo " A newer deployment is also staged; reboot to pick up the rest of the"
+    echo " layered packages."
+  fi
+elif ((pending_status == 77)); then
+  echo " First pass complete - Hyprland is staged for the next boot."
+  echo
+  echo " rpm-ostree layers packages into a new deployment, so the Hyprland"
+  echo " session only appears after a reboot. Reboot now, then re-run this"
+  echo " script once to finish the steps that need the new binaries."
+  echo
+  echo " Your existing Sway session is untouched and still selectable if"
+  echo " something's wrong."
+else
+  echo " ❌ Hyprland is NOT installed and nothing is staged for the next boot."
+  echo
+  echo " Rebooting will not help. Check what rpm-ostree reported:"
+  echo "   grep -n -A5 '\\[hyprland\\]' $OMARCHY_INSTALL_LOG_FILE"
+  echo "   rpm-ostree status"
+fi
 echo "=========================================================================="

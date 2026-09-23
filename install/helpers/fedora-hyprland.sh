@@ -71,8 +71,15 @@ if is_ostree; then
   fi
 
   echo "[hyprland] stable hyprland does not resolve - falling back to hyprland-git"
-  rpm-ostree install --idempotent -y hyprland-git hyprland-git-uwsm
-  exit 0
+  if rpm-ostree install --idempotent -y hyprland-git hyprland-git-uwsm; then
+    exit 0
+  fi
+
+  # Neither variant could be layered. Fail loudly: install-atomic.sh treats this as fatal, because
+  # every later step assumes a compositor is queued and the closing "reboot and re-run" advice
+  # would otherwise loop forever without Hyprland ever reaching SDDM.
+  echo "[hyprland] ERROR: rpm-ostree could not layer hyprland or hyprland-git (see the rpm-ostree output above)" >&2
+  exit 1
 fi
 
 if rpm -q hyprland &>/dev/null; then
