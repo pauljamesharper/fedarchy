@@ -156,6 +156,11 @@ dotnet-runtime-9.0
 # instead. See install/config/docker.sh, enable-services.sh, firewall.sh,
 # and etc-files.sh, which all skip their Docker-specific steps on any
 # OSTree/atomic target for the same reason.
+#
+# Distrobox, not the toolbox the base image ships: it runs any distro's
+# userspace, not just Fedora's, and exports apps and binaries to the host.
+# base.sh removes toolbox from the base image once this is layered.
+distrobox
 
 # Media & Apps
 imv

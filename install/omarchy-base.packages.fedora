@@ -118,6 +118,7 @@ dotnet-runtime-9.0
 moby-engine
 docker-compose
 docker-buildx
+distrobox
 
 # Media & Apps
 imv

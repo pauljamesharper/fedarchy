@@ -31,7 +31,7 @@
 #   secureblue_install_gui     - flatpak --user: GUI apps.
 #   secureblue_install_cli     - brew (linuxbrew): CLI tools with no
 #                                 systemd/kernel coupling.
-#   secureblue_install_toolbox - escape hatch for a build environment that
+#   secureblue_install_distrobox - escape hatch for a build environment that
 #                                 genuinely needs a full mutable userspace.
 #                                 Not used by default; most things fit one of
 #                                 the three tiers above.
@@ -71,6 +71,23 @@ secureblue_install_system_batch() {
 
 secureblue_remove_system() {
   rpm-ostree uninstall -y "$1"
+}
+
+# Whether the newest deployment (the pending one when a layering change
+# awaits a reboot) lists the package under the given rpm-ostree status key:
+# requested-packages or requested-base-removals. rpm -q only sees the booted
+# deployment, so it misses both until the reboot.
+secureblue_deployment_requests() {
+  rpm-ostree status --json 2>/dev/null |
+    jq -e --arg key "$1" --arg pkg "$2" '.deployments[0][$key] // [] | index($pkg) != null' >/dev/null
+}
+
+# Removes a package that ships in the base image itself, which rpm-ostree
+# uninstall can't touch since it only undoes layering.
+secureblue_remove_base() {
+  secureblue_package_installed "$1" || return 0
+  secureblue_deployment_requests requested-base-removals "$1" && return 0
+  rpm-ostree override remove "$1"
 }
 
 secureblue_update_system() {
@@ -120,13 +137,13 @@ secureblue_install_cli() {
   brew install "$formula"
 }
 
-# Escape hatch: run a package install inside a toolbox container instead of
-# layering it on the host. Creates the container on first use. The
+# Escape hatch: run a package install inside a distrobox container instead
+# of layering it on the host. Creates the container on first use. The
 # container is a regular (non-atomic) Fedora image, so dnf/sudo work
 # normally *inside* it - this is not another run0 call.
-secureblue_install_toolbox() {
+secureblue_install_distrobox() {
   local package="$1" container="${2:-omarchy}"
-  toolbox list --containers 2>/dev/null | grep -qw "$container" ||
-    toolbox create -y "$container"
-  toolbox run --container "$container" sudo dnf install -y "$package"
+  distrobox list --no-color 2>/dev/null | awk -F'|' '{ gsub(/ /, "", $2); print $2 }' | grep -qx "$container" ||
+    distrobox create --yes --name "$container" --image registry.fedoraproject.org/fedora-toolbox:latest
+  distrobox enter --name "$container" -- sudo dnf install -y "$package"
 }

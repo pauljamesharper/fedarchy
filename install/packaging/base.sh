@@ -151,6 +151,17 @@ if is_ostree && ((${#system_pending[@]} > 0)); then
   fi
 fi
 
+# Distrobox replaces the toolbox Fedora ships, so drop toolbox once distrobox
+# is there to take over. On atomic, toolbox is part of the base image and a
+# fresh distrobox layer only shows up in the pending deployment.
+if is_ostree; then
+  if omarchy_package_installed distrobox || secureblue_deployment_requests requested-packages distrobox; then
+    secureblue_remove_base toolbox || echo "[WARNING] could not remove toolbox from the base image"
+  fi
+elif omarchy_package_installed distrobox && omarchy_package_installed toolbox; then
+  omarchy_remove_package toolbox || echo "[WARNING] could not remove toolbox"
+fi
+
 echo
 if ((${#failed_packages[@]} > 0)); then
   echo "==============================="

@@ -194,8 +194,8 @@ updates itself on a timer, unattended:
   if the tool in question isn't installed. `Menu > Update > Omarchy` still reaches Flatpak and mise
   on demand too (`omarchy-update-manual-pkgs`, `omarchy-update-mise`), for anyone who wants an update
   right now instead of waiting on the timer.
-- Toolbox containers have no timer; update the packages inside one by entering it and running its
-  own package manager.
+- Distrobox containers have no timer; update the packages inside one by entering it and running its
+  own package manager, or run `distrobox upgrade --all`.
 
 So `Menu > Update > Omarchy` remains available for anyone without those dotfiles timers, or who
 wants an update to happen right now instead of waiting on the schedule — first run just no longer
