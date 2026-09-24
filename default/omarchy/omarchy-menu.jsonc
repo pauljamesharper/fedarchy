@@ -190,6 +190,7 @@
   // Install
   "install.flatpak": {"icon":"󰏗","label":"Flatpak","description":"Desktop apps from Flathub with Bazaar","action":"omarchy-launch-bazaar"},
   "install.homebrew": {"icon":"","label":"Homebrew","description":"Command line tools with brew install","action":"omarchy-launch-homebrew"},
+  "install.distrobox": {"icon":"","label":"Distrobox","description":"Other Linux distros in containers","action":"omarchy-launch-distrobox"},
   "install.ai": {"icon":"󱚤","label":"AI"},
   "install.service": {"icon":"","label":"Service"},
   "install.development": {"icon":"󰵮","label":"Development"},

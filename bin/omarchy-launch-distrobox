@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# omarchy:summary=Open a terminal with a short guide to running other distros in Distrobox
+
+instructions='cd ~
+if ! command -v distrobox >/dev/null; then
+  echo "Distrobox is not available yet. If omarchy update just installed it, reboot first."
+  echo
+fi
+cat <<TEXT
+Distrobox runs another Linux distro in a container that shares your home folder.
+
+  distrobox create --name arch --image archlinux:latest    make a box
+  distrobox enter arch                                     step inside it
+  sudo pacman -S <package>                                 install with that distro'"'"'s tools
+  distrobox-export --app <app>                             add a box app to your host launcher
+  distrobox-export --bin /usr/bin/<tool>                   run a box command from the host
+  exit                                                     leave the box
+
+Manage boxes with "distrobox list", "distrobox stop <name>" and "distrobox rm <name>".
+Other images: ubuntu:24.04, debian:stable, registry.fedoraproject.org/fedora-toolbox:latest
+
+TEXT
+exec "${SHELL:-bash}"'
+
+exec setsid uwsm-app -- xdg-terminal-exec -e bash -c "$instructions"
