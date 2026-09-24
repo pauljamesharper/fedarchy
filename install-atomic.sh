@@ -47,7 +47,7 @@ export PATH="$OMARCHY_PATH/bin:$PATH"
 
 if [[ ! -d "$OMARCHY_INSTALL" ]]; then
   echo "❌ $OMARCHY_INSTALL not found." >&2
-  echo "Run this from a cloned omadora repo in $OMARCHY_PATH." >&2
+  echo "Run this from a cloned Atomic Omarchy repo in $OMARCHY_PATH." >&2
   exit 1
 fi
 
