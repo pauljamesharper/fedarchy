@@ -52,9 +52,19 @@ elif ! command -v lazydocker &>/dev/null; then
 fi
 
 # 2. terminaltexteffects (tte) - for install animations
+# Installed into its own venv built from the system python: `pip3` can
+# resolve to Homebrew's python (earlier on PATH on OSTree targets), which
+# refuses --user installs as an externally-managed environment.
 if ! command -v tte &>/dev/null; then
-  echo "Installing terminaltexteffects (pip)..."
-  pip3 install --user terminaltexteffects
+  echo "Installing terminaltexteffects (venv)..."
+  tte_venv="$HOME/.local/share/omarchy-venvs/terminaltexteffects"
+  if /usr/bin/python3 -m venv "$tte_venv" &&
+    "$tte_venv/bin/pip" install --quiet terminaltexteffects; then
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$tte_venv/bin/tte" "$HOME/.local/bin/tte"
+  else
+    echo "[WARN] Failed to install terminaltexteffects, continuing..."
+  fi
 fi
 
 # 3. mise (brew on any OSTree/atomic target - it's a plain CLI tool with a

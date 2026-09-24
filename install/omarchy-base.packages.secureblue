@@ -73,7 +73,9 @@ gui:com.github.PintaProject.Pinta
 gui:com.github.xournalpp.xournalpp
 gui:org.libreoffice.LibreOffice
 gui:org.gnome.Calculator
-gui:org.gnome.DiskUtility
+# GNOME Disks is not published on Flathub - it needs udisks on the host
+# anyway, so it stays system tier.
+gnome-disk-utility
 # Chromium's flatpak sandboxing complicates the native-messaging-host
 # registration install/user/chromium.sh does for bundled extensions -
 # revisit that script before relying on this; kept system-tier for now so
@@ -88,15 +90,21 @@ foot
 
 # Shell & CLI tools - brew (clear, well-known formula names).
 #
-# starship, eza, fzf, ripgrep, bat, fd, zoxide, jq, tldr, neovim (below),
-# and yt-dlp are deliberately NOT listed here even though Omarchy wants all
-# of them: they're already in ~/dotfiles/Brewfile, this user's own
-# canonical "command-line programs come from Homebrew" list, which
-# packaging/base.sh's secureblue branch runs via `brew bundle` before
-# processing this file. Listing them again here would just be a second,
-# easy-to-drift-out-of-sync copy of the same nine formulas - one location,
-# not two. Only the tools Omarchy needs that AREN'T already in that
-# Brewfile are listed below.
+# packaging/base.sh runs `brew bundle` against ~/dotfiles/Brewfile first
+# when that file exists; anything it already installed is skipped here
+# ("already installed"), so listing these is harmless on a machine with
+# that Brewfile and required on one without it (otherwise nvim, starship
+# etc. are simply never installed and lazyvim.sh fails).
+cli:starship
+cli:eza
+cli:fzf
+cli:ripgrep
+cli:bat
+cli:fd
+cli:zoxide
+cli:tldr
+cli:neovim
+cli:yt-dlp
 cli:btop
 # fastfetch and tmux NOT listed here: both are already natively layered on
 # this image's base (LayeredPackages already includes both) - listing them
@@ -112,6 +120,7 @@ cli:dua-cli
 # JSON::PP - small system libs, not worth a brew detour.
 libxkbcommon-utils
 perl-JSON-PP
+zsh
 less
 man-db
 plocate
@@ -122,8 +131,7 @@ whois
 unzip
 util-linux-script
 
-# Development - brew where it's a pure userspace CLI. neovim not listed:
-# already in ~/dotfiles/Brewfile (see the note above).
+# Development - brew where it's a pure userspace CLI.
 cli:gh
 cli:tree-sitter-cli
 cli:ruby

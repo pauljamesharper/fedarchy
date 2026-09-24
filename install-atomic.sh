@@ -238,8 +238,27 @@ if ! is_secureblue; then
 fi
 run_user "$OMARCHY_INSTALL/helpers/fedora-copr.sh" || abort_install "helpers/fedora-copr.sh (COPR setup)"
 
+# --- Base image upgrade --------------------------------------------------------
+# COPR packages (Hyprland and its libraries) are built against the current
+# Fedora updates, but rpm-ostree cannot upgrade packages that are part of the
+# base image while layering - a stale base (e.g. the libstdc++/Qt shipped on
+# the install media) makes every layered install fail to depsolve. Stage the
+# base upgrade first; later `rpm-ostree install` calls layer on top of that
+# pending deployment, so everything lands together on the next boot.
+omarchy_log_line "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: rpm-ostree upgrade"
+if omarchy_log_to_stdout; then
+  rpm-ostree upgrade
+else
+  rpm-ostree upgrade >>"$OMARCHY_INSTALL_LOG_FILE" 2>&1
+fi
+if (($? == 0)); then
+  omarchy_log_line "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: rpm-ostree upgrade"
+else
+  abort_install "rpm-ostree upgrade (base image update)"
+fi
+
 # --- Packaging ---------------------------------------------------------------
-run_user "$OMARCHY_INSTALL/helpers/fedora-hyprland.sh"
+run_user "$OMARCHY_INSTALL/helpers/fedora-hyprland.sh" || abort_install "helpers/fedora-hyprland.sh (Hyprland could not be layered)"
 run_user "$OMARCHY_INSTALL/packaging/base.sh"
 run_user "$OMARCHY_INSTALL/packaging/other.sh"
 run_user "$OMARCHY_INSTALL/packaging/fonts.sh"
@@ -288,9 +307,9 @@ run_user "$OMARCHY_INSTALL/config/xdg-user-dirs.sh"
 # No timezone-detection.sh: already configured on this machine.
 run_user "$OMARCHY_INSTALL/config/zsh.sh"
 run_user "$OMARCHY_INSTALL/config/lazyvim.sh"
-omarchy_log_line "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: omarchy-finalize-user"
-omarchy-finalize-user --first-install </dev/null >>"$OMARCHY_INSTALL_LOG_FILE" 2>&1 ||
-  omarchy_log_line "[$(date '+%Y-%m-%d %H:%M:%S')] Warning: omarchy-finalize-user reported an error (continuing)"
+omarchy_log_line "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: omarchy-provision-user"
+omarchy-provision-user --first-install </dev/null >>"$OMARCHY_INSTALL_LOG_FILE" 2>&1 ||
+  omarchy_log_line "[$(date '+%Y-%m-%d %H:%M:%S')] Warning: omarchy-provision-user reported an error (continuing)"
 
 # --- Login (SDDM) -------------------------------------------------------------
 # SDDM is already the active display manager on both targets -
@@ -319,11 +338,11 @@ echo
 echo "=========================================================================="
 echo " First pass complete."
 echo
-echo " If this is the first time hyprland/hyprland-uwsm were installed above,"
-echo " that package is only layered for the *next* boot - rpm-ostree needs a"
-echo " reboot before the binary actually exists. Re-run this script after"
-echo " rebooting: already-installed packages are skipped automatically, and"
-echo " it will pick up from wherever this run left off."
+echo " The base image upgrade and every package layered above (Hyprland"
+echo " included) are staged for the *next* boot - rpm-ostree needs a reboot"
+echo " before they actually exist. Reboot, then re-run this script:"
+echo " already-installed packages are skipped automatically, and the steps"
+echo " that need those packages (zsh, LazyVim, locate) finish on that pass."
 echo
 echo " Once hyprland-uwsm shows up at the SDDM login screen, log in there."
 echo " Your existing Sway session is untouched and still selectable if"

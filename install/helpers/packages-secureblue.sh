@@ -89,6 +89,9 @@ secureblue_install_gui() {
   if secureblue_gui_installed "$app_id"; then
     return 0
   fi
+  # base.sh installs GUI apps before fedora-manual.sh runs, so the user
+  # flathub remote may not exist yet on a first install.
+  flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo || return 1
   flatpak install -y --user flathub "$app_id"
 }
 
