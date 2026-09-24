@@ -75,6 +75,8 @@ if is_ostree; then
   install -d /etc/environment.d
   cp -f "$omarchy_default"/environment.d/*.conf /etc/environment.d/
 
+  bash "$OMARCHY_PATH/install/config/ostree-auto-updates.sh"
+
   # Written straight into conf.d instead of upstream's conf.avail-plus-symlink
   # indirection - fontconfig scans conf.d directly either way, and this
   # skips a /usr/share write for no loss of function.
