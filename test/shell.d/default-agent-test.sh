@@ -78,6 +78,12 @@ for command in gum hyprctl omarchy-webapp-remove-all omarchy-tui-remove-all omar
   ln -s omarchy-test-noop "$mock_bin/$command"
 done
 
+# Remove Preinstalls also uninstalls packages; keep this test away from the
+# real package managers.
+for command in omarchy-pkg-drop omarchy-pkg-flatpak-drop omarchy-pkg-brew-drop gum hyprctl; do
+  printf '#!/bin/bash\nexit 0\n' >"$mock_bin/$command"
+done
+
 chmod +x "$mock_bin"/*
 
 export HOME="$test_home"

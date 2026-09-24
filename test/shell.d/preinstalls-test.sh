@@ -34,11 +34,25 @@ cat >"$mock_bin/omarchy-pkg-drop" <<'SH'
 printf '%s\n' "$@" >"$OMARCHY_TEST_PKG_LOG"
 SH
 
+# Atomic Fedora restores and removes through Flatpak and Homebrew instead.
+for command in omarchy-pkg-flatpak-add omarchy-pkg-flatpak-drop; do
+  cat >"$mock_bin/$command" <<'SH'
+#!/bin/bash
+printf '%s\n' "$@" >"$OMARCHY_TEST_PKG_LOG"
+exit "${OMARCHY_TEST_PKG_ADD_STATUS:-0}"
+SH
+done
+for command in omarchy-pkg-brew-add omarchy-pkg-brew-drop; do
+  printf '#!/bin/bash\nprintf "%%s\\n" "$@" >"$OMARCHY_TEST_BREW_LOG"\n' >"$mock_bin/$command"
+done
+
 chmod +x "$mock_bin"/*
 
 export PATH="$mock_bin:$PATH"
 export HOME="$test_home"
 export OMARCHY_TEST_PKG_LOG="$pkg_log"
+export OMARCHY_TEST_BREW_LOG="$test_tmp/brew"
+export OMARCHY_OSTREE_BOOTED="$test_tmp/not-ostree"
 
 # Both scripts restore and remove the same set, and every package in it has to be
 # one Omarchy actually ships, or Remove Preinstalls takes out an app the user
@@ -89,3 +103,21 @@ pass "declining Remove Preinstalls changes nothing"
 "$ROOT/bin/omarchy-remove-preinstalls" >/dev/null
 [[ -f $marker ]] || fail "Remove Preinstalls records the opt-out"
 pass "Remove Preinstalls records the opt-out"
+
+# On atomic Fedora the same round trip goes through the Flatpak list.
+touch "$test_tmp/ostree-booted"
+export OMARCHY_OSTREE_BOOTED="$test_tmp/ostree-booted"
+rm -f "$marker"
+
+"$ROOT/bin/omarchy-install-preinstalls" >/dev/null
+mapfile -t restored <"$pkg_log"
+"$ROOT/bin/omarchy-remove-preinstalls" >/dev/null
+mapfile -t dropped <"$pkg_log"
+mapfile -t listed <"$ROOT/install/preinstalls.flatpak"
+
+[[ ${restored[*]} == "${listed[*]}" && ${dropped[*]} == "${listed[*]}" ]] ||
+  fail "atomic preinstalls round-trip the Flatpak list" \
+    "restored: ${restored[*]}
+dropped:  ${dropped[*]}"
+pass "atomic preinstalls round-trip the Flatpak list"
+

@@ -17,26 +17,33 @@ if gum confirm "Are you sure you want to remove all preinstalled web apps, TUI w
        ~/.local/bin/gh ~/.local/bin/opencode ~/.local/bin/playwright ~/.local/bin/playwright-cli ~/.local/bin/pi \
        ~/.local/bin/ghui ~/.local/bin/hunk
 
-  omarchy-pkg-drop \
-    aether \
-    cliamp \
-    spotify \
-    libreoffice-fresh \
-    1password \
-    1password-cli \
-    xournalpp \
-    signal-desktop \
-    pinta \
-    obsidian \
-    obs-studio \
-    kdenlive \
-    lazydocker \
-    opencode \
-    claude-code \
-    github-cli
+  # On atomic Fedora the preinstalled apps are Flatpaks and gh comes from Homebrew
+  # (omarchy-base.packages.secureblue); omarchy-pkg-drop would find none of them.
+  source "$OMARCHY_PATH/install/helpers/distro-secureblue.sh"
+  if is_ostree; then
+    omarchy-pkg-flatpak-drop $(<"$OMARCHY_PATH/install/preinstalls.flatpak")
+    omarchy-pkg-brew-drop gh
+  else
+    omarchy-pkg-drop \
+      aether \
+      cliamp \
+      spotify \
+      libreoffice-fresh \
+      1password \
+      1password-cli \
+      xournalpp \
+      signal-desktop \
+      pinta \
+      obsidian \
+      obs-studio \
+      kdenlive \
+      lazydocker \
+      opencode \
+      claude-code \
+      github-cli
 
-  # Typora, LocalSend, Obsidian and Moonlight are delivered as Flatpaks on Fedora
-  # (install/helpers/fedora-manual.sh), not dnf packages, so omarchy-pkg-drop cannot remove them.
-  # Uninstall the flatpaks directly.
-  flatpak uninstall -y --user io.typora.Typora org.localsend.localsend_app md.obsidian.Obsidian com.moonlight_stream.Moonlight 2>/dev/null || true
+    # Typora, LocalSend, Obsidian and Moonlight are delivered as Flatpaks on Fedora
+    # (install/helpers/fedora-manual.sh), not dnf packages, so omarchy-pkg-drop cannot remove them.
+    flatpak uninstall -y --user io.typora.Typora org.localsend.localsend_app md.obsidian.Obsidian com.moonlight_stream.Moonlight 2>/dev/null || true
+  fi
 fi
