@@ -21,11 +21,12 @@ nvim | vim | nano | micro | hx | helix | fresh)
   fi
   ;;
 emacs)
-  # Attach to the emacs.service daemon instead of cold-starting a second,
-  # standalone Emacs; -a falls back to a plain `emacs` if no daemon is
-  # reachable. -u LD_PRELOAD sidesteps secureblue's hardened_malloc, which
-  # segfaults a cold-started GUI frame; it's a no-op elsewhere.
-  exec setsid uwsm-app -- env -u LD_PRELOAD emacsclient -c -a emacs "$@"
+  # Open a frame on the Emacs daemon instead of cold-starting a second,
+  # standalone Emacs. An empty -a starts the daemon on first use when
+  # emacs.service isn't running it, so every later launch reuses it.
+  # -u LD_PRELOAD sidesteps secureblue's hardened_malloc, which segfaults a
+  # cold-started GUI frame; it's a no-op elsewhere.
+  exec setsid uwsm-app -- env -u LD_PRELOAD emacsclient -c -a '' "$@"
   ;;
 *)
   exec setsid uwsm-app -- "$editor" "$@"
