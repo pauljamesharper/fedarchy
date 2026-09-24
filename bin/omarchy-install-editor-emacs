@@ -1,9 +1,11 @@
 #!/bin/bash
 
-# omarchy:summary=Install Emacs with Omarchy theme and font integration via the omarchy-emacs AUR package
+# omarchy:summary=Install Emacs from the Fedora repositories
+
+set -e
 
 echo "Installing Emacs..."
-omarchy-pkg-aur-add omarchy-emacs && omarchy-install-emacs
+omarchy-pkg-add emacs
 
 # emacsclient opens a frame on the running daemon, not a second Emacs
 setsid uwsm-app -- gtk-launch emacsclient >/dev/null 2>&1 &

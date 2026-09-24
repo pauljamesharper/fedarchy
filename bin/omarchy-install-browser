@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # omarchy:summary=Install a supported browser
-# omarchy:args=<brave|brave-origin|firefox|zen>
+# omarchy:args=<chrome|edge|brave|brave-origin|firefox|zen>
 # omarchy:examples=omarchy install browser firefox | omarchy install browser brave
 
 setup_policy_directory() {
@@ -14,56 +14,11 @@ announce_browser_installed() {
   echo "$1 browser installed. Make it the default via Setup > Defaults > Browser."
 }
 
-copy_chromium_flags() {
-  mkdir -p ~/.config
-  cp -f "$OMARCHY_PATH/config/chromium-flags.conf" "$1"
-  omarchy-install-chromium-ytdlp
-}
-
+# /etc/firefox/policies is read on every Linux install and, unlike the
+# distribution directory under /usr/lib, stays writable on atomic Fedora.
 setup_firefox_preferences() {
-  local distribution_dir="$1"
-
-  setup_policy_directory "$distribution_dir"
-  sudo cp -f "$OMARCHY_PATH/default/firefox/policies.json" "$distribution_dir/policies.json"
-}
-
-install_zen() {
-  # Upstream installs the AUR's zen-browser-bin. Zen ships a zen.linux-<arch>.tar.xz
-  # asset on every release for both x86_64 and aarch64, so unpack the one matching
-  # this host into /opt and link the launcher.
-  local zen_arch
-  case "$(uname -m)" in
-  x86_64) zen_arch="x86_64" ;;
-  aarch64) zen_arch="aarch64" ;;
-  *)
-    echo "Zen has no build for $(uname -m)." >&2
-    return 1
-    ;;
-  esac
-  local url="https://github.com/zen-browser/desktop/releases/latest/download/zen.linux-${zen_arch}.tar.xz"
-  local archive
-  archive=$(mktemp -t zen-XXXXXX.tar.xz) || return 1
-
-  echo "Downloading Zen ($zen_arch)..."
-  curl -fL --retry 3 -o "$archive" "$url" || { rm -f "$archive"; return 1; }
-
-  sudo rm -rf /opt/zen
-  sudo mkdir -p /opt/zen
-  sudo tar -xJf "$archive" -C /opt/zen --strip-components=1 || { rm -f "$archive"; return 1; }
-  rm -f "$archive"
-
-  sudo ln -sfn /opt/zen/zen /usr/local/bin/zen
-
-  sudo tee /usr/share/applications/zen.desktop >/dev/null <<'DESKTOP'
-[Desktop Entry]
-Name=Zen Browser
-Exec=/opt/zen/zen %u
-Icon=/opt/zen/browser/chrome/icons/default/default128.png
-Type=Application
-Categories=Network;WebBrowser;
-MimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;
-StartupNotify=true
-DESKTOP
+  setup_policy_directory /etc/firefox/policies
+  sudo cp -f "$OMARCHY_PATH/default/firefox/policies.json" /etc/firefox/policies/policies.json
 }
 
 add_brave_repo() {
@@ -79,15 +34,22 @@ setup_firefox_wayland() {
   echo "MOZ_ENABLE_WAYLAND=1" > ~/.config/environment.d/omarchy-firefox-wayland.conf
 }
 
+# Browsers with a Flathub build install from there; Brave Origin and Firefox
+# have none and stay distro packages.
 case $1 in
+chrome)
+  echo "Installing Chrome..."
+  omarchy-pkg-flatpak-add com.google.Chrome || exit 1
+  announce_browser_installed "Chrome"
+  ;;
+edge)
+  echo "Installing Edge..."
+  omarchy-pkg-flatpak-add com.microsoft.Edge || exit 1
+  announce_browser_installed "Edge"
+  ;;
 brave)
   echo "Installing Brave..."
-  add_brave_repo
-  omarchy-pkg-add brave-browser || exit 1
-
-  setup_policy_directory /etc/brave/policies/managed
-  copy_chromium_flags ~/.config/brave-flags.conf
-  omarchy-theme-set-browser
+  omarchy-pkg-flatpak-add com.brave.Browser || exit 1
   announce_browser_installed "Brave"
   ;;
 brave-origin)
@@ -107,21 +69,17 @@ firefox)
   echo "Installing Firefox..."
   omarchy-pkg-add firefox || exit 1
 
-  setup_firefox_preferences /usr/lib/firefox/distribution
+  setup_firefox_preferences
   setup_firefox_wayland
   announce_browser_installed "Firefox"
   ;;
 zen)
   echo "Installing Zen..."
-  # Zen has no Fedora package and no vendor repository, but it does publish an aarch64 tarball.
-  install_zen || exit 1
-
-  setup_firefox_preferences /opt/zen/distribution
-  setup_firefox_wayland
+  omarchy-pkg-flatpak-add app.zen_browser.zen || exit 1
   announce_browser_installed "Zen"
   ;;
 *)
-  echo "Usage: omarchy-install-browser <chrome|brave|brave-origin|edge|firefox|zen>"
+  echo "Usage: omarchy-install-browser <chrome|edge|brave|brave-origin|firefox|zen>"
   exit 1
   ;;
 esac

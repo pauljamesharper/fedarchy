@@ -3,8 +3,6 @@
 # omarchy:summary=Launch the default editor selected via Omarchy defaults.
 # omarchy:args=[--inline] <path>
 
-default_editor="$HOME/.local/state/omarchy/defaults/editor"
-
 if [[ ${1:-} == "--inline" ]]; then
   inline=true
   shift
@@ -12,13 +10,7 @@ else
   inline=false
 fi
 
-if [[ -f $default_editor ]]; then
-  read -r editor <"$default_editor"
-else
-  editor="nvim"
-fi
-
-omarchy-cmd-present "$editor" || editor="nvim"
+editor=$(omarchy-default-editor --command) || editor="nvim"
 
 case "${editor##*/}" in
 nvim | vim | nano | micro | hx | helix | fresh)

@@ -1,11 +1,35 @@
 #!/bin/bash
 
 # omarchy:summary=Set the default editor used by omarchy-launch-editor
-# omarchy:args=[code|cursor|zed|sublime_text|helix|vim|emacs|nvim]
+# omarchy:args=[--command | code|cursor|zed|sublime_text|helix|vim|emacs|nvim]
 # omarchy:examples=omarchy default editor | omarchy default editor code | omarchy default editor helix
 
+# Flatpak editors put no command on PATH, only a wrapper under the exports
+# directory, and Homebrew names Helix hx. Map a stored editor name to what
+# actually runs it, failing when nothing does.
+editor_command() {
+  local flatpak_bin="$HOME/.local/share/flatpak/exports/bin" candidate
+  case "$1" in
+  zeditor) set -- zeditor "$flatpak_bin/dev.zed.Zed" ;;
+  sublime_text) set -- sublime_text "$flatpak_bin/com.sublimehq.SublimeText" ;;
+  helix) set -- helix hx ;;
+  esac
+
+  for candidate in "$@"; do
+    if ! omarchy-cmd-missing "$candidate"; then
+      command -v "$candidate" || printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
 installing=false
-if [[ ${1:-} == "--install" ]]; then
+if [[ ${1:-} == "--command" ]]; then
+  read -r editor <"$HOME/.local/state/omarchy/defaults/editor" 2>/dev/null
+  editor_command "${editor:-nvim}" || editor_command nvim
+  exit
+elif [[ ${1:-} == "--install" ]]; then
   installing=true
   shift
 fi
@@ -36,19 +60,19 @@ nvim) selection="nvim"; editor="nvim"; name="Neovim"; glyph= ;;
   ;;
 esac
 
-if omarchy-cmd-missing "$editor"; then
+if ! editor_command "$editor" >/dev/null; then
   if [[ $installing == "false" ]]; then
     exec omarchy-launch-floating-terminal-with-presentation omarchy-default-editor --install "$selection"
   else
     case "$selection" in
     code) omarchy-install-editor-vscode ;;
-    cursor) omarchy-pkg-add cursor-bin ;;
+    cursor) omarchy-install-editor-cursor ;;
     zed) omarchy-install-editor-zed ;;
-    sublime_text) omarchy-pkg-add sublime-text-4 ;;
+    sublime_text) omarchy-install-editor-sublime ;;
     helix) omarchy-install-editor-helix ;;
-    vim) omarchy-pkg-add vim ;;
+    vim) omarchy-pkg-brew-add vim ;;
     emacs) omarchy-install-editor-emacs ;;
-    nvim) omarchy-pkg-add neovim ;;
+    nvim) omarchy-pkg-brew-add neovim ;;
     esac || exit 1
   fi
 fi

@@ -1,16 +1,24 @@
 #!/bin/bash
 
-# omarchy:summary=Open a terminal ready to install command line tools with Homebrew
+# omarchy:summary=Open a terminal ready to install or remove command line tools with Homebrew
+# omarchy:args=[--remove]
 
-instructions='cd ~
-cat <<TEXT
-Install command line tools with Homebrew:
+if [[ ${1:-} == "--remove" ]]; then
+  guide='Remove command line tools installed with Homebrew:
+
+  brew uninstall <package>
+
+See what is installed with "brew list", and clean up leftovers with "brew autoremove".'
+else
+  guide='Install command line tools with Homebrew:
 
   brew install <package>
 
-Find one with "brew search <name>", or browse https://formulae.brew.sh
+Find one with "brew search <name>", or browse https://formulae.brew.sh'
+fi
 
-TEXT
+instructions='cd ~
+printf "%s\n\n" "$OMARCHY_GUIDE"
 exec "${SHELL:-bash}"'
 
-exec setsid uwsm-app -- xdg-terminal-exec -e bash -c "$instructions"
+OMARCHY_GUIDE="$guide" exec setsid uwsm-app -- xdg-terminal-exec -e bash -c "$instructions"

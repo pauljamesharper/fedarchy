@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# omarchy:summary=Remove Bitwarden and its CLI.
+
+set -e
+
+omarchy-pkg-flatpak-drop com.bitwarden.desktop
+omarchy-pkg-brew-drop bitwarden-cli
+
+rm -rf "$HOME/.var/app/com.bitwarden.desktop"
+
+echo ""
+echo "Bitwarden has been removed."

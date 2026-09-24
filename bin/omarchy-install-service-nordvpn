@@ -27,7 +27,16 @@ gpgcheck=1
 gpgkey=$NORDVPN_KEY_URL
 EOF
 
-sudo dnf install -y nordvpn
+omarchy-pkg-add nordvpn
+
+# On atomic Fedora the package, its daemon and its group only exist after the
+# reboot, so running this again from the menu then finishes the setup.
+if ! systemctl cat nordvpnd.service &>/dev/null; then
+  echo -e "\nReboot, then choose Install > Service > NordVPN again to finish setting it up."
+  echo
+  gum confirm "Reboot now?" && omarchy-system-reboot
+  exit 0
+fi
 
 echo "Enabling NordVPN daemon..."
 sudo systemctl enable --now nordvpnd

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# omarchy:summary=Remove Heroic Games Launcher and its configs, prefixes, and caches.
+
+set -e
+
+omarchy-pkg-flatpak-drop com.heroicgameslauncher.hgl
+
+rm -rf "$HOME/.var/app/com.heroicgameslauncher.hgl"
+
+echo ""
+echo "Heroic Games Launcher and its data have been removed. Games installed under ~/Games were left in place."

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# omarchy:summary=Install Ollama from Homebrew and run it as a user service.
+
+set -e
+
+echo "Installing Ollama..."
+omarchy-pkg-brew-add ollama
+brew services start ollama
+
+echo ""
+echo "Ollama is running. Pull a model with: ollama pull llama3.2"

@@ -1,6 +1,25 @@
 #!/bin/bash
 
-# omarchy:summary=Open a terminal with a short guide to running other distros in Distrobox
+# omarchy:summary=Open a terminal with a short guide to running, or removing, other distros in Distrobox
+# omarchy:args=[--remove]
+
+if [[ ${1:-} == "--remove" ]]; then
+  instructions='cd ~
+cat <<TEXT
+Remove Distrobox boxes and the apps they export:
+
+  distrobox list                                  see your boxes
+  distrobox enter <box> -- distrobox-export --app <app> --delete
+                                                  take a box app off the host launcher
+  distrobox stop <box>                            stop a box
+  distrobox rm <box>                              delete a box and everything installed in it
+
+Apps installed from the Install menu live in the "arch" box; remove those from the Remove menu.
+
+TEXT
+exec "${SHELL:-bash}"'
+  exec setsid uwsm-app -- xdg-terminal-exec -e bash -c "$instructions"
+fi
 
 instructions='cd ~
 if ! command -v distrobox >/dev/null; then

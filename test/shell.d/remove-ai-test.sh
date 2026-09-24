@@ -13,7 +13,8 @@ cat >"$tmp_dir/bin/omarchy-pkg-drop" <<'SCRIPT'
 #!/bin/bash
 printf 'drop:%s\n' "$*" >>"$TEST_LOG"
 SCRIPT
-chmod +x "$tmp_dir/bin/omarchy-pkg-drop"
+cp "$tmp_dir/bin/omarchy-pkg-drop" "$tmp_dir/bin/omarchy-pkg-aur-drop"
+chmod +x "$tmp_dir/bin/omarchy-pkg-drop" "$tmp_dir/bin/omarchy-pkg-aur-drop"
 
 export TEST_LOG="$tmp_dir/log"
 export PATH="$tmp_dir/bin:$PATH"
@@ -86,10 +87,9 @@ pass "Grok Bot removal deletes its own data"
 [[ -d $HOME/.grok ]] || fail "Grok Bot removal keeps the Grok CLI's state"
 pass "Grok Bot removal keeps the Grok CLI's state"
 
-# Every acceleration variant depends on the base package, so package presence is
-# the test the remover can actually act on; the command alone is also provided by
-# builds omarchy-pkg-drop will not touch.
+# Ollama comes from Homebrew, which the rpm database knows nothing about, so the
+# command is what shows it is installed.
 ollama_row=$(grep '^  "remove.ai.ollama":' "$ROOT/default/omarchy/omarchy-menu.jsonc")
-[[ $ollama_row == *'"when":"omarchy-pkg-present ollama"'* ]] ||
+[[ $ollama_row == *'"when":"omarchy-cmd-present ollama"'* ]] ||
   fail "Ollama removal is offered only where the package is installed" "$ollama_row"
 pass "Ollama removal is offered only where the package is installed"

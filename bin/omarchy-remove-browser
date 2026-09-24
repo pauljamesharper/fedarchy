@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # omarchy:summary=Remove a supported browser and clean up Omarchy browser defaults
-# omarchy:args=<brave|brave-origin|firefox|zen>
+# omarchy:args=<chrome|edge|brave|brave-origin|firefox|zen>
 # omarchy:examples=omarchy remove browser firefox | omarchy remove browser brave
 # omarchy:requires-sudo=true
 
@@ -13,21 +13,26 @@ set_fallback_default_browser() {
     return
   fi
 
-  if omarchy-cmd-present chromium; then
-    env -u BROWSER xdg-settings set default-web-browser chromium.desktop || true
+  if [[ -f /usr/share/applications/chromium-browser.desktop ]]; then
+    env -u BROWSER xdg-settings set default-web-browser chromium-browser.desktop || true
   fi
 }
 
 case $1 in
+chrome)
+  echo "Removing Chrome..."
+  set_fallback_default_browser com.google.Chrome.desktop
+  omarchy-pkg-flatpak-drop com.google.Chrome
+  ;;
+edge)
+  echo "Removing Edge..."
+  set_fallback_default_browser com.microsoft.Edge.desktop
+  omarchy-pkg-flatpak-drop com.microsoft.Edge
+  ;;
 brave)
   echo "Removing Brave..."
-  set_fallback_default_browser brave-browser.desktop
-  omarchy-pkg-drop brave-browser
-  rm -f ~/.config/brave-flags.conf
-
-  if omarchy-pkg-missing brave-origin; then
-    sudo rm -rf /etc/brave
-  fi
+  set_fallback_default_browser com.brave.Browser.desktop
+  omarchy-pkg-flatpak-drop com.brave.Browser
   ;;
 brave-origin)
   echo "Removing Brave Origin..."
@@ -35,9 +40,7 @@ brave-origin)
   omarchy-pkg-drop brave-origin
   rm -f ~/.config/brave-origin-flags.conf
 
-  if omarchy-pkg-missing brave-browser; then
-    sudo rm -rf /etc/brave
-  fi
+  sudo rm -rf /etc/brave
   ;;
 firefox)
   echo "Removing Firefox..."
@@ -46,13 +49,11 @@ firefox)
   ;;
 zen)
   echo "Removing Zen..."
-  set_fallback_default_browser zen.desktop
-  # Zen is unpacked into /opt rather than installed as a package, so there is nothing for dnf to drop.
-  sudo rm -rf /opt/zen
-  sudo rm -f /usr/local/bin/zen /usr/share/applications/zen.desktop
+  set_fallback_default_browser app.zen_browser.zen.desktop
+  omarchy-pkg-flatpak-drop app.zen_browser.zen
   ;;
 *)
-  echo "Usage: omarchy-remove-browser <brave|brave-origin|firefox|zen>"
+  echo "Usage: omarchy-remove-browser <chrome|edge|brave|brave-origin|firefox|zen>"
   exit 1
   ;;
 esac

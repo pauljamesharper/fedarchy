@@ -12,33 +12,40 @@ fi
 
 if (($# == 0)); then
   case "$(env -u BROWSER xdg-settings get default-web-browser)" in
-  chromium.desktop) echo "chromium" ;;
-  google-chrome.desktop) echo "chrome" ;;
-  brave-browser.desktop) echo "brave" ;;
+  chromium.desktop | chromium-browser.desktop) echo "chromium" ;;
+  google-chrome.desktop | com.google.Chrome.desktop) echo "chrome" ;;
+  brave-browser.desktop | com.brave.Browser.desktop) echo "brave" ;;
   brave-origin.desktop) echo "brave-origin" ;;
-  microsoft-edge.desktop) echo "edge" ;;
-  firefox.desktop) echo "firefox" ;;
-  zen.desktop) echo "zen" ;;
+  microsoft-edge.desktop | com.microsoft.Edge.desktop) echo "edge" ;;
+  firefox.desktop | org.mozilla.firefox.desktop) echo "firefox" ;;
+  zen.desktop | app.zen_browser.zen.desktop) echo "zen" ;;
   *) env -u BROWSER xdg-settings get default-web-browser ;;
   esac
   exit 0
 fi
 
 case "$1" in
-chromium) browser="chromium"; command="chromium"; desktop_id="chromium.desktop"; name="Chromium"; glyph= ;;
-chrome) browser="chrome"; command="google-chrome-stable"; desktop_id="google-chrome.desktop"; name="Chrome"; glyph=󰊯 ;;
-brave) browser="brave"; command="brave"; desktop_id="brave-browser.desktop"; name="Brave"; glyph=󰖟 ;;
+chromium) browser="chromium"; command="chromium-browser"; desktop_id="chromium-browser.desktop"; name="Chromium"; glyph= ;;
+chrome) browser="chrome"; flatpak="com.google.Chrome"; name="Chrome"; glyph=󰊯 ;;
+brave) browser="brave"; flatpak="com.brave.Browser"; name="Brave"; glyph=󰖟 ;;
 brave-origin) browser="brave-origin"; command="brave-origin"; desktop_id="brave-origin.desktop"; name="Brave Origin"; glyph=󰖟 ;;
-edge) browser="edge"; command="microsoft-edge-stable"; desktop_id="microsoft-edge.desktop"; name="Edge"; glyph=󰇩 ;;
+edge) browser="edge"; flatpak="com.microsoft.Edge"; name="Edge"; glyph=󰇩 ;;
 firefox) browser="firefox"; command="firefox"; desktop_id="firefox.desktop"; name="Firefox"; glyph=󰈹 ;;
-zen) browser="zen"; command="zen-browser"; desktop_id="zen.desktop"; name="Zen"; glyph=󰖟 ;;
+zen) browser="zen"; flatpak="app.zen_browser.zen"; name="Zen"; glyph=󰖟 ;;
 *)
   echo "Usage: omarchy-default-browser <chromium|chrome|brave|brave-origin|edge|firefox|zen>"
   exit 1
   ;;
 esac
 
-if omarchy-cmd-missing "$command"; then
+if [[ -n ${flatpak-} ]]; then
+  desktop_id="$flatpak.desktop"
+  installed() { flatpak info --user "$flatpak" &>/dev/null; }
+else
+  installed() { ! omarchy-cmd-missing "$command"; }
+fi
+
+if ! installed; then
   if [[ $installing == "false" ]]; then
     exec omarchy-launch-floating-terminal-with-presentation omarchy-default-browser --install "$browser"
   else

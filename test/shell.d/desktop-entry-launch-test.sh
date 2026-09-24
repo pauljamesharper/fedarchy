@@ -17,7 +17,7 @@ printf 'pkg:%s\n' "$*" >>"$OMARCHY_TEST_LOG"
 exit "${OMARCHY_TEST_PKG_STATUS:-0}"
 SH
 
-for command in omarchy-pkg-aur-add omarchy-install-emacs omazed omarchy-theme-set-vscode omarchy-install-gaming-gpu-lib32; do
+for command in omarchy-pkg-aur-add omarchy-pkg-flatpak-add omarchy-pkg-brew-add omarchy-install-emacs omazed omarchy-theme-set-vscode omarchy-install-gaming-gpu-lib32; do
   cat >"$mock_bin/$command" <<'SH'
 #!/bin/bash
 exit 0
@@ -69,8 +69,8 @@ assert_detached_installer_launch() {
 assert_detached_installer_launch omarchy-install-editor-emacs emacsclient
 assert_detached_installer_launch omarchy-install-editor-vscode code
 assert_detached_installer_launch omarchy-install-editor-zed dev.zed.Zed
-assert_detached_installer_launch omarchy-install-gaming-heroic heroic
-assert_detached_installer_launch omarchy-install-gaming-steam steam
+assert_detached_installer_launch omarchy-install-gaming-heroic com.heroicgameslauncher.hgl
+assert_detached_installer_launch omarchy-install-gaming-steam com.valvesoftware.Steam
 
 bash "$ROOT/bin/omarchy-install-and-launch" "Example App" "alpha beta" "Disk Usage"
 presentation_command=$(<"$OMARCHY_TEST_PRESENTATION")
