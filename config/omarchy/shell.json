@@ -7,7 +7,7 @@
   "bar": {
     "position": "top",
     "transparent": false,
-    "centerAnchor": "",
+    "centerAnchor": "omarchy.clock",
     "layout": {
       "left": [
         {
@@ -17,22 +17,27 @@
           "id": "omarchy.workspaces"
         }
       ],
-      "center": [],
-      "right": [
+      "center": [
+        {
+          "id": "omarchy.indicators",
+          "alwaysShow": true
+        },
         {
           "id": "omarchy.weather"
-        },
-        {
-          "id": "omarchy.system-update"
-        },
-        {
-          "id": "omarchy.indicators"
         },
         {
           "id": "omarchy.clock",
           "format": "dddd HH:mm",
           "formatAlt": "d MMMM 'W'ww yyyy",
           "verticalFormat": "HH\n—\nmm"
+        }
+      ],
+      "right": [
+        {
+          "id": "omarchy.screenshot"
+        },
+        {
+          "id": "omarchy.system-update"
         },
         {
           "id": "omarchy.keyboard-layout"
