@@ -115,12 +115,12 @@ cli:btop
 # `brew uninstall fastfetch tmux` cleans up the redundant brew copies.
 cli:gum
 cli:dua-cli
+cli:tmux
 # omarchy-menu-keybindings resolves XKB keycodes with xkbcli
 # (libxkbcommon-utils) and decodes the Hyprland bind list with Perl's
 # JSON::PP - small system libs, not worth a brew detour.
 libxkbcommon-utils
 perl-JSON-PP
-zsh
 less
 man-db
 plocate

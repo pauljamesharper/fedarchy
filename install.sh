@@ -174,7 +174,6 @@ sudo bash -eE -c 'export OMARCHY_PATH="$1" OMARCHY_INSTALL="$2" OMARCHY_INSTALL_
 run_user "$OMARCHY_INSTALL/config/config.sh"
 run_user "$OMARCHY_INSTALL/config/xdg-user-dirs.sh"
 run_user "$OMARCHY_INSTALL/config/timezone-detection.sh"
-run_user "$OMARCHY_INSTALL/config/zsh.sh"
 run_user "$OMARCHY_INSTALL/config/lazyvim.sh"
 omarchy_log_line "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: omarchy-provision-user"
 omarchy-provision-user --first-install </dev/null >>"$OMARCHY_INSTALL_LOG_FILE" 2>&1 ||

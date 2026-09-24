@@ -15,8 +15,6 @@ unwired_leaves=(
   "config/lazyvim.sh"
   # A function library sourced by omarchy-cmd-tzupdate-*, not a setup leaf.
   "config/timezone-detection.sh"
-  # Superseded by the on-demand omarchy-setup-zsh command.
-  "config/zsh.sh"
   # Restores mkinitcpio pacman hooks that the x86 ISO disables to speed its
   # install. Nothing on the Mac path disables them, so wiring it would only add
   # a redundant mkinitcpio -P.

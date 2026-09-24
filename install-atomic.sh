@@ -305,7 +305,6 @@ fi
 run_user "$OMARCHY_INSTALL/config/config.sh"
 run_user "$OMARCHY_INSTALL/config/xdg-user-dirs.sh"
 # No timezone-detection.sh: already configured on this machine.
-run_user "$OMARCHY_INSTALL/config/zsh.sh"
 run_user "$OMARCHY_INSTALL/config/lazyvim.sh"
 omarchy_log_line "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: omarchy-provision-user"
 omarchy-provision-user --first-install </dev/null >>"$OMARCHY_INSTALL_LOG_FILE" 2>&1 ||
@@ -342,7 +341,7 @@ echo " The base image upgrade and every package layered above (Hyprland"
 echo " included) are staged for the *next* boot - rpm-ostree needs a reboot"
 echo " before they actually exist. Reboot, then re-run this script:"
 echo " already-installed packages are skipped automatically, and the steps"
-echo " that need those packages (zsh, LazyVim, locate) finish on that pass."
+echo " that need those packages (LazyVim, locate) finish on that pass."
 echo
 echo " Once hyprland-uwsm shows up at the SDDM login screen, log in there."
 echo " Your existing Sway session is untouched and still selectable if"
