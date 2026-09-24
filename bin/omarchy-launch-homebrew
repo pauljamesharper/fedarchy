@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# omarchy:summary=Open a terminal ready to install command line tools with Homebrew
+
+instructions='cd ~
+cat <<TEXT
+Install command line tools with Homebrew:
+
+  brew install <package>
+
+Find one with "brew search <name>", or browse https://formulae.brew.sh
+
+TEXT
+exec "${SHELL:-bash}"'
+
+exec setsid uwsm-app -- xdg-terminal-exec -e bash -c "$instructions"

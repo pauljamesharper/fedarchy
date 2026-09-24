@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# omarchy:summary=Open Bazaar to browse and install Flatpak apps
+
+app_id="io.github.kolunmi.Bazaar"
+
+if flatpak info "$app_id" &>/dev/null; then
+  omarchy-launch-or-focus "$app_id" "uwsm-app -- flatpak run $app_id"
+else
+  omarchy-launch-floating-terminal-with-presentation "flatpak install --user -y flathub $app_id && uwsm-app -- flatpak run $app_id"
+fi

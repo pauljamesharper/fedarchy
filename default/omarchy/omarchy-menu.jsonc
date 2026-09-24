@@ -188,7 +188,8 @@
   "setup.reset": {"icon":"󰑓","label":"Reset Computer","when":"[[ $(findmnt -no FSTYPE /) == btrfs ]]","action":"omarchy-launch-floating-terminal-with-presentation omarchy-system-factory-reset"},
 
   // Install
-  "install.package": {"icon":"󰉉","label":"Package","keywords":"dnf rpm software","action":"xdg-terminal-exec --app-id=org.omarchy.terminal omarchy-pkg-install"},
+  "install.flatpak": {"icon":"󰏗","label":"Flatpak","description":"Desktop apps from Flathub with Bazaar","action":"omarchy-launch-bazaar"},
+  "install.homebrew": {"icon":"","label":"Homebrew","description":"Command line tools with brew install","action":"omarchy-launch-homebrew"},
   "install.ai": {"icon":"󱚤","label":"AI"},
   "install.service": {"icon":"","label":"Service"},
   "install.development": {"icon":"󰵮","label":"Development"},
