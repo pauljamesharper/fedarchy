@@ -25,8 +25,11 @@ consume_sleep_events() {
 monitor_sleep_events() {
   local monitor_fd monitor_pid status
 
+  # Name the system bus socket instead of trusting --system: a Homebrew
+  # dbus-monitor earlier on PATH resolves --system inside its own prefix,
+  # where no bus is listening.
   coproc SLEEP_EVENTS {
-    exec dbus-monitor --system \
+    exec dbus-monitor --address "${DBUS_SYSTEM_BUS_ADDRESS:-unix:path=/run/dbus/system_bus_socket}" \
       "type='signal',sender='org.freedesktop.login1',interface='org.freedesktop.login1.Manager',member='PrepareForSleep'"
   }
   monitor_fd=${SLEEP_EVENTS[0]}
