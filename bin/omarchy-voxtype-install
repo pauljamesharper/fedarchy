@@ -18,7 +18,7 @@ if gum confirm "Install Voxtype + AI model (~150MB) to enable dictation?"; then
   omarchy-pkg-add wtype
 
   if ! omarchy-cmd-present voxtype; then
-    bash "$OMARCHY_INSTALL/helpers/fedora-first-party.sh" ||
+    bash "$OMARCHY_INSTALL/helpers/fedora-first-party.sh" voxtype ||
       { echo "Could not install voxtype." >&2; exit 1; }
   fi
 

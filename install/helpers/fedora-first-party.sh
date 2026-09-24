@@ -11,7 +11,11 @@ source "$OMARCHY_INSTALL/helpers/distro.sh"
 
 is_fedora || exit 0
 
-if [[ "$(uname -m)" != "aarch64" ]]; then
+# "voxtype" installs just Voxtype, which unlike the rest also ships x86_64 builds;
+# omarchy-voxtype-install uses it so dictation works on either architecture.
+only="${1:-}"
+
+if [[ $only != "voxtype" && "$(uname -m)" != "aarch64" ]]; then
   echo "[first-party] not aarch64 - skipping first-party tool installs"
   exit 0
 fi
@@ -117,11 +121,29 @@ install_tensaku() {
   rm -rf "$tmp"
 }
 
-# --- voxtype: push-to-talk dictation (prebuilt aarch64 CPU binary; v1.0+ dropped Linux aarch64) ---
+# --- voxtype: push-to-talk dictation (prebuilt CPU binary; v1.0+ dropped Linux aarch64) ---
 install_voxtype() {
   stamped voxtype "$VOXTYPE_VER" && return 0
-  echo "Installing voxtype $VOXTYPE_VER (release binary, aarch64-cpu)..."
-  install_bin "https://github.com/peteonrails/voxtype/releases/download/v${VOXTYPE_VER}/voxtype-${VOXTYPE_VER}-linux-aarch64-cpu" voxtype \
+
+  # x86_64 builds are split by instruction set, and there is no baseline one.
+  local variant
+  case "$(uname -m)" in
+  aarch64) variant="aarch64-cpu" ;;
+  x86_64)
+    if grep -qw avx512f /proc/cpuinfo; then
+      variant="x86_64-avx512"
+    else
+      variant="x86_64-avx2"
+    fi
+    ;;
+  *)
+    warn "voxtype has no build for $(uname -m)"
+    return 1
+    ;;
+  esac
+
+  echo "Installing voxtype $VOXTYPE_VER (release binary, $variant)..."
+  install_bin "https://github.com/peteonrails/voxtype/releases/download/v${VOXTYPE_VER}/voxtype-${VOXTYPE_VER}-linux-${variant}" voxtype \
     || { warn "voxtype download failed"; return 1; }
   stamp voxtype "$VOXTYPE_VER"
 }
@@ -225,6 +247,11 @@ install_share_picker() {
   fi
   rm -rf "$tmp"
 }
+
+if [[ $only == "voxtype" ]]; then
+  install_voxtype
+  exit
+fi
 
 install_aether || true
 install_cliamp || true
