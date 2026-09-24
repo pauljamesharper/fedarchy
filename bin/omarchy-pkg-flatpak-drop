@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# omarchy:summary=Uninstall user Flatpak apps, skipping ones that aren't installed.
+# omarchy:args=<app-ids...>
+
+(($# > 0)) || { echo "Usage: omarchy-pkg-flatpak-drop <app-ids...>" >&2; exit 1; }
+
+for app in "$@"; do
+  flatpak info --user "$app" &>/dev/null || continue
+  flatpak uninstall --user -y --noninteractive "$app" || exit 1
+done

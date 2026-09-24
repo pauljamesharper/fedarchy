@@ -5,7 +5,10 @@
 OMARCHY_INSTALL=${OMARCHY_INSTALL:-"$OMARCHY_PATH/install"}
 source "$OMARCHY_INSTALL/helpers/packages.sh"
 
+staged=()
 for pkg in "$@"; do
+  omarchy_package_installed "$pkg" || staged+=("$pkg")
+
   if ! omarchy_install_package "$pkg"; then
     echo -e "\033[31mError: Failed to install $pkg\033[0m" >&2
     exit 1
@@ -24,5 +27,11 @@ for pkg in "$@"; do
     exit 1
   fi
 done
+
+# rpm-ostree stages layered packages for the next boot rather than installing
+# them into the running system.
+if is_ostree && ((${#staged[@]} > 0)); then
+  echo "Installed for the next boot. Reboot to start using: ${staged[*]}"
+fi
 
 exit 0

@@ -1,10 +1,47 @@
 #!/bin/bash
 
-# omarchy:summary=Add the named packages to the system if they're missing. Returns false if it couldn't be done.
+# omarchy:summary=Install AUR packages in an Arch Linux distrobox and export their apps to the host.
 # omarchy:args=<packages...>
+# omarchy:examples=omarchy pkg aur-add lmstudio-bin
 
-# There is no AUR on Fedora. Anything an upstream flow tries to install "from the AUR" either has a
-# Fedora/COPR package under the same name - in which case the regular dnf path below handles it - or
-# it does not exist here, and failing loudly beats pretending.
-echo "AUR is unavailable on Fedora. Installing from the enabled dnf repositories instead."
-exec omarchy-pkg-add "$@"
+# Fedora has no AUR, so AUR-only apps live in one shared Arch box. Their
+# desktop entries are exported to the host launcher, and a marker per package
+# lets menu guards answer without starting the container.
+
+(($# > 0)) || { echo "Usage: omarchy-pkg-aur-add <packages...>" >&2; exit 1; }
+
+box="arch"
+state_dir="$HOME/.local/state/omarchy/aur"
+
+if omarchy-cmd-missing distrobox; then
+  echo "Distrobox is not available. If omarchy update just installed it, reboot first." >&2
+  exit 1
+fi
+
+if ! distrobox list --no-color 2>/dev/null | awk -F'|' '{ gsub(/ /, "", $2); print $2 }' | grep -qx "$box"; then
+  echo "Creating the Arch Linux box..."
+  distrobox create --yes --name "$box" --image docker.io/library/archlinux:latest || exit 1
+fi
+
+in_box() {
+  distrobox enter --name "$box" -- bash -c "$1"
+}
+
+in_box 'command -v yay >/dev/null || {
+  sudo pacman -Syu --needed --noconfirm base-devel git &&
+    tmp=$(mktemp -d) &&
+    git clone --depth 1 https://aur.archlinux.org/yay-bin.git "$tmp" &&
+    (cd "$tmp" && makepkg -si --noconfirm)
+  rc=$?; rm -rf "$tmp"; exit $rc
+}' || exit 1
+
+mkdir -p "$state_dir"
+for pkg in "$@"; do
+  in_box "yay -S --needed --noconfirm $(printf %q "$pkg")" || exit 1
+
+  # Export every launcher the package ships; CLI-only packages have none.
+  in_box "pacman -Qlq $(printf %q "$pkg") | grep -E '^/usr/share/applications/[^/]+\.desktop\$' |
+    while read -r desktop; do distrobox-export --app \"\$desktop\"; done"
+
+  touch "$state_dir/$pkg"
+done

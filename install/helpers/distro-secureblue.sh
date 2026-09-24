@@ -27,8 +27,9 @@
 # other atomic Fedora spins, bootc images) - /run/ostree-booted is the
 # standard, distro-agnostic marker for "the root filesystem is an OSTree
 # deployment", not something specific to secureblue.
+# OMARCHY_OSTREE_BOOTED lets tests choose a branch without touching /run.
 is_ostree() {
-  [[ -f /run/ostree-booted ]]
+  [[ -f ${OMARCHY_OSTREE_BOOTED:-/run/ostree-booted} ]]
 }
 
 # True specifically on secureblue (any variant/image: sericea, silverblue,

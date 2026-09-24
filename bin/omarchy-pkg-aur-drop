@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# omarchy:summary=Remove AUR packages from the Arch Linux distrobox and unexport their apps.
+# omarchy:args=<packages...>
+
+(($# > 0)) || { echo "Usage: omarchy-pkg-aur-drop <packages...>" >&2; exit 1; }
+
+box="arch"
+state_dir="$HOME/.local/state/omarchy/aur"
+
+for pkg in "$@"; do
+  [[ -f $state_dir/$pkg ]] || continue
+
+  distrobox enter --name "$box" -- bash -c "
+    pacman -Qlq $(printf %q "$pkg") | grep -E '^/usr/share/applications/[^/]+\.desktop\$' |
+      while read -r desktop; do distrobox-export --app \"\$desktop\" --delete; done
+    sudo pacman -Rns --noconfirm $(printf %q "$pkg")" || exit 1
+
+  rm -f "$state_dir/$pkg"
+done

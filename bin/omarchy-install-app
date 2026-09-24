@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # omarchy:summary=Install a packaged app, surfacing the install in a floating terminal
-# omarchy:args=<display-name> <packages>
+# omarchy:args=<display-name> <[flatpak:|brew:|aur:]packages>
 # omarchy:examples=omarchy install app 'LM Studio' lmstudio-bin
 
 name="${1-}"
@@ -12,4 +12,12 @@ if [[ -z $name || -z $packages ]]; then
   exit 1
 fi
 
-exec omarchy-launch-floating-terminal-with-presentation "echo 'Installing ${name}...'; omarchy-pkg-add ${packages}"
+# A prefix picks the package source; bare names are distro packages.
+case "$packages" in
+flatpak:*) installer="omarchy-pkg-flatpak-add" packages="${packages#flatpak:}" ;;
+brew:*) installer="omarchy-pkg-brew-add" packages="${packages#brew:}" ;;
+aur:*) installer="omarchy-pkg-aur-add" packages="${packages#aur:}" ;;
+*) installer="omarchy-pkg-add" ;;
+esac
+
+exec omarchy-launch-floating-terminal-with-presentation "echo 'Installing ${name}...'; ${installer} ${packages}"

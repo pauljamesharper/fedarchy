@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # omarchy:summary=Install a packaged app and launch it once it finishes
-# omarchy:args=<display-name> <packages> <desktop-id>
-# omarchy:examples=omarchy install and launch Cursor cursor-bin cursor
+# omarchy:args=<display-name> <[flatpak:|brew:|aur:]packages> <desktop-id>
+# omarchy:examples=omarchy install and launch Minecraft flatpak:com.mojang.Minecraft com.mojang.Minecraft
 
 name="${1-}"
 packages="${2-}"
@@ -13,9 +13,17 @@ if [[ -z $name || -z $packages || -z $desktop_id ]]; then
   exit 1
 fi
 
+# A prefix picks the package source; bare names are distro packages.
+case "$packages" in
+flatpak:*) installer="omarchy-pkg-flatpak-add" packages="${packages#flatpak:}" ;;
+brew:*) installer="omarchy-pkg-brew-add" packages="${packages#brew:}" ;;
+aur:*) installer="omarchy-pkg-aur-add" packages="${packages#aur:}" ;;
+*) installer="omarchy-pkg-add" ;;
+esac
+
 printf -v install_message '%q' "Installing ${name}..."
 printf -v desktop_id_arg '%q' "$desktop_id"
 
 # The subshell keeps & from backgrounding the package installation too.
 exec omarchy-launch-floating-terminal-with-presentation \
-  "echo ${install_message}; omarchy-pkg-add ${packages} && (setsid uwsm-app -- gtk-launch ${desktop_id_arg} >/dev/null 2>&1 &)"
+  "echo ${install_message}; ${installer} ${packages} && (setsid uwsm-app -- gtk-launch ${desktop_id_arg} >/dev/null 2>&1 &)"

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# omarchy:summary=Install Flatpak apps from Flathub for the current user, skipping ones already installed.
+# omarchy:args=<app-ids...>
+# omarchy:examples=omarchy pkg flatpak-add com.valvesoftware.Steam
+
+(($# > 0)) || { echo "Usage: omarchy-pkg-flatpak-add <app-ids...>" >&2; exit 1; }
+
+for app in "$@"; do
+  flatpak info --user "$app" &>/dev/null && continue
+  flatpak install --user -y --noninteractive flathub "$app" || exit 1
+done

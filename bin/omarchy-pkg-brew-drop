@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# omarchy:summary=Uninstall Homebrew formulae, skipping ones that aren't installed.
+# omarchy:args=<formulae...>
+
+(($# > 0)) || { echo "Usage: omarchy-pkg-brew-drop <formulae...>" >&2; exit 1; }
+
+for formula in "$@"; do
+  brew list --formula "$formula" &>/dev/null || continue
+  brew uninstall "$formula" || exit 1
+done

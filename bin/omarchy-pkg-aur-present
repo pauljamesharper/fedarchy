@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# omarchy:summary=Returns true if all of the named AUR packages were installed with omarchy-pkg-aur-add.
+# omarchy:args=<packages...>
+
+for pkg in "$@"; do
+  [[ -f $HOME/.local/state/omarchy/aur/$pkg ]] || exit 1
+done
