@@ -69,9 +69,7 @@ BarWidget {
     anchors.fill: parent
     bar: root.bar
     text: panelLoader.item ? panelLoader.item.label : ""
-    slotSize: Style.bar.statusSlot + 16
-    opticalSize: Style.bar.iconCanvas + 16
-    fontSize: Style.bar.iconFont + 14
+    slotSize: Style.bar.statusSlot
     // Weather Icons live in the Nerd Font PUA; left to fallback, Qt draws
     // STIX Two Math's unrelated glyphs at the same codepoints instead.
     fontFamily: panelLoader.item ? panelLoader.item.iconFontFamily : Style.font.family
