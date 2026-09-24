@@ -10,9 +10,9 @@ if [[ -z $1 ]]; then
 fi
 
 remove_php() {
-  # Mirrors the package set omarchy-install-dev-env installs on Fedora. omarchy-pkg-drop skips
-  # anything that is not installed, so this stays quiet on a partial install.
-  omarchy-pkg-drop php php-cli composer php-pdo php-pecl-xdebug3
+  # Mirrors the formulae omarchy-install-dev-env installs. omarchy-pkg-brew-drop skips anything
+  # that is not installed, so this stays quiet on a partial install.
+  omarchy-pkg-brew-drop composer php
 }
 
 case "$1" in
@@ -52,7 +52,7 @@ laravel)
   ;;
 symfony)
   echo -e "Removing Symfony CLI...\n"
-  omarchy-pkg-drop symfony-cli
+  omarchy-pkg-brew-drop symfony-cli
   ;;
 python)
   echo -e "Removing Python...\n"

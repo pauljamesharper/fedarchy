@@ -12,7 +12,9 @@ if [[ -z $1 ]]; then
 fi
 
 install_php() {
-  sudo dnf install -y php php-cli composer php-pdo php-pecl-xdebug3
+  # Homebrew's PHP already bundles bcmath, intl, iconv, openssl, pdo_sqlite and
+  # pdo_mysql, and needs no root, so it works the same on atomic Fedora.
+  omarchy-pkg-brew-add php composer
 
   # Install Path for Composer
   if [[ :$PATH: != *:$HOME/.config/composer/vendor/bin:* ]]; then
@@ -23,26 +25,10 @@ install_php() {
     echo "Composer global bin directory already in PATH."
   fi
 
-  # Enable some extensions
-  local php_ini_path="/etc/php/php.ini"
-  local extensions_to_enable=(
-    "bcmath"
-    "intl"
-    "iconv"
-    "openssl"
-    "pdo_sqlite"
-    "pdo_mysql"
-  )
-
-  # Enable Xdebug
-  sudo sed -i \
-    -e 's/^;zend_extension=xdebug.so/zend_extension=xdebug.so/' \
-    -e 's/^;xdebug.mode=debug/xdebug.mode=debug/' \
-    /etc/php/conf.d/xdebug.ini
-
-  for ext in "${extensions_to_enable[@]}"; do
-    sudo sed -i "s/^;extension=${ext}/extension=${ext}/" "$php_ini_path"
-  done
+  # Xdebug is a PECL extension rather than part of the formula.
+  if ! php -m 2>/dev/null | grep -qi '^xdebug$'; then
+    pecl install xdebug || echo "Xdebug could not be installed; PHP works without it."
+  fi
 }
 
 install_node() {
@@ -90,7 +76,7 @@ laravel)
 symfony)
   echo -e "Installing PHP and Symfony...\n"
   install_php
-  omarchy-pkg-add symfony-cli
+  omarchy-pkg-brew-add symfony-cli
   echo -e "\nYou can now run: symfony new --webapp myproject"
   ;;
 python)
@@ -143,7 +129,7 @@ dotnet)
   ;;
 clojure)
   echo -e "Installing Clojure...\n"
-  omarchy-pkg-add rlwrap
+  omarchy-pkg-brew-add rlwrap
   mise use --global clojure@latest
   ;;
 scala)
