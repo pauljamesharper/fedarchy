@@ -26,7 +26,7 @@ export PATH="$OMARCHY_PATH/bin:$PATH"
 # Must run from a clone.
 if [[ ! -d "$OMARCHY_INSTALL" ]]; then
   echo "❌ $OMARCHY_INSTALL not found." >&2
-  echo "Run this from a cloned omarchy-mac-fedora repo in $OMARCHY_PATH, or use boot.sh." >&2
+  echo "Run this from a cloned Atomic Omarchy repo in $OMARCHY_PATH, or use boot.sh." >&2
   exit 1
 fi
 
@@ -43,7 +43,7 @@ bash "$OMARCHY_INSTALL/preflight/guard.sh" || exit 1
 # first with the terminal attached, exactly where 3.8.x ran it: on a fresh
 # system its `sudo dnf install gum` is where the password goes in. `sudo true`
 # then covers re-runs where gum is already present and no dnf call happens.
-echo "🔐 omarchy-mac-fedora installation requires administrator access..."
+echo "🔐 Atomic Omarchy installation requires administrator access..."
 bash "$OMARCHY_INSTALL/helpers/fedora-gum.sh"
 if ! sudo true; then
   echo "❌ Could not obtain sudo access." >&2
