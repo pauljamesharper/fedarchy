@@ -31,6 +31,8 @@ if command -v flatpak >/dev/null 2>&1 && [[ -n "$(flatpak list --app --user --co
   flatpak update -y --user || echo "[WARNING] Flatpak update failed - continuing"
 fi
 
+omarchy-update-distrobox || echo "[WARNING] Distrobox upgrade failed - continuing"
+
 if [[ -f "$OMARCHY_INSTALL/helpers/fedora-hyprland.sh" ]]; then
   echo -e "\e[32m\nCheck the Hyprland core package\e[0m"
   bash "$OMARCHY_INSTALL/helpers/fedora-hyprland.sh" || echo "[WARNING] Hyprland core check failed - continuing"

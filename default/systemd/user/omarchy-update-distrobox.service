@@ -1,0 +1,12 @@
+[Unit]
+Description=Upgrade the packages inside every Distrobox container
+Documentation=man:distrobox-upgrade(1)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+TimeoutStartSec=3600
+Nice=10
+IOSchedulingClass=idle
+ExecStart=/usr/bin/omarchy-update-distrobox

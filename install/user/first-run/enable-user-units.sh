@@ -21,4 +21,5 @@ systemctl --user enable --now \
   omarchy-crash-watch.service \
   omarchy-update-brew.timer \
   omarchy-update-flatpak.timer \
-  omarchy-update-mise.timer
+  omarchy-update-mise.timer \
+  omarchy-update-distrobox.timer

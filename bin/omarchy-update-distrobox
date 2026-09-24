@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# omarchy:summary=Upgrade the packages inside every Distrobox container
+
+# Boxes are separate userspaces that nothing on the host updates, so this is
+# their update mechanism. Runs from the daily omarchy-update-distrobox.timer
+# and from Menu > Update > Omarchy alike.
+set -uo pipefail
+
+command -v distrobox >/dev/null 2>&1 || { echo "distrobox not found - nothing to do"; exit 0; }
+
+if ! distrobox list --no-color 2>/dev/null | tail -n +2 | grep -q .; then
+  echo "No distrobox containers - nothing to do"
+  exit 0
+fi
+
+echo -e "\e[32m\nUpgrade Distrobox containers\e[0m"
+distrobox upgrade --all || echo "[WARNING] distrobox upgrade reported errors"
