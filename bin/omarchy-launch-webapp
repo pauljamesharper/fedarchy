@@ -9,6 +9,8 @@ fi
 
 desktop_paths=(
   "$HOME/.local/share/applications"
+  "$HOME/.local/share/flatpak/exports/share/applications"
+  "/var/lib/flatpak/exports/share/applications"
   "$HOME/.nix-profile/share/applications"
   "/usr/local/share/applications"
   "/usr/share/applications"
@@ -34,10 +36,28 @@ resolve_exec() {
 
   file="$(resolve_desktop_file "$desktop_id")" || return 1
   exec_line="$(sed -n 's/^Exec=//p' "$file" | head -n1)"
-  exec_line="${exec_line%% *}"
+  # Keep the whole command: a Flatpak entry is "flatpak run ... <app-id>", so
+  # its first word alone launches nothing. Field codes and Flatpak's @@ file
+  # forwarding markers are for desktop-file launchers; this passes its own args.
+  exec_line="$(sed -E 's/@@[^@]*@@//g; s/%[fFuUick]//g; s/^[[:space:]]+//; s/[[:space:]]+$//; s/[[:space:]]+/ /g' <<<"$exec_line")"
   [[ -n "$exec_line" ]] || return 1
   printf "%s\n" "$exec_line"
 }
+
+chromium_candidates=(
+  chromium-browser.desktop
+  chromium.desktop
+  org.chromium.Chromium.desktop
+  io.github.ungoogled_software.ungoogled_chromium.desktop
+  google-chrome.desktop
+  com.google.Chrome.desktop
+  brave-browser.desktop
+  com.brave.Browser.desktop
+  microsoft-edge.desktop
+  com.microsoft.Edge.desktop
+  vivaldi-stable.desktop
+  com.vivaldi.Vivaldi.desktop
+)
 
 pick_default_desktop() {
   local configured
@@ -50,14 +70,10 @@ pick_default_desktop() {
   fi
 
   for candidate in \
-    chromium-browser.desktop \
-    chromium.desktop \
-    google-chrome.desktop \
-    brave-browser.desktop \
-    microsoft-edge.desktop \
-    vivaldi-stable.desktop \
+    "${chromium_candidates[@]}" \
     org.mozilla.firefox.desktop \
-    firefox.desktop; do
+    firefox.desktop \
+    app.zen_browser.zen.desktop; do
     if resolve_desktop_file "$candidate" >/dev/null; then
       printf "%s\n" "$candidate"
       return 0
@@ -70,7 +86,7 @@ pick_default_desktop() {
 pick_chromium_desktop() {
   local candidate
 
-  for candidate in chromium-browser.desktop chromium.desktop google-chrome.desktop brave-browser.desktop microsoft-edge.desktop vivaldi-stable.desktop; do
+  for candidate in "${chromium_candidates[@]}"; do
     if resolve_desktop_file "$candidate" >/dev/null; then
       printf "%s\n" "$candidate"
       return 0
@@ -107,12 +123,15 @@ if [[ -z "$browser_exec" ]]; then
   exit 1
 fi
 
+read -ra browser_cmd <<<"$browser_exec"
+shopt -s nocasematch
+
 if [[ $browser_exec =~ (chromium|chrome|brave|edge|opera|vivaldi|helium) ]]; then
-  exec setsid uwsm-app -- "$browser_exec" --new-window --app="$url" "$@"
+  exec setsid uwsm-app -- "${browser_cmd[@]}" --new-window --app="$url" "$@"
 fi
 
-if [[ $browser_exec =~ firefox ]]; then
-  exec setsid uwsm-app -- "$browser_exec" --new-window "$url" "$@"
+if [[ $browser_exec =~ (firefox|zen) ]]; then
+  exec setsid uwsm-app -- "${browser_cmd[@]}" --new-window "$url" "$@"
 fi
 
-exec setsid uwsm-app -- "$browser_exec" "$url" "$@"
+exec setsid uwsm-app -- "${browser_cmd[@]}" "$url" "$@"
