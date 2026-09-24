@@ -39,16 +39,16 @@ output_keybindings() (
   socket_dir=$(mktemp -d)
   socket="$socket_dir/tmux"
   trap 'tmux -S "$socket" kill-server >/dev/null 2>&1 || true; rm -f "$socket"; rmdir "$socket_dir" 2>/dev/null || true' EXIT
+  # Keep tmux's built-in bindings: the shipped config is deliberately empty, so
+  # the defaults are the bindings, and the config only layers changes on top.
   tmux -S "$socket" -f /dev/null start-server \; \
-    unbind-key -a -T prefix \; \
-    unbind-key -a -T root \; \
-    unbind-key -a -T copy-mode \; \
-    unbind-key -a -T copy-mode-vi \; \
     source-file "$config_file" \; \
     show-options -g prefix \; \
     show-options -g prefix2 \; \
+    show-options -gw mode-keys \; \
     list-keys -aN -T prefix -P "prefix" \; \
     list-keys -aN -T root -P "root" \; \
+    list-keys -aN -T copy-mode -P "copy-mode" \; \
     list-keys -aN -T copy-mode-vi -P "copy-mode-vi" | awk '
 function key_part_text(part, is_modifier, part_count) {
   gsub(/^\\/, "", part)
@@ -68,15 +68,22 @@ function key_part_text(part, is_modifier, part_count) {
   return toupper(part)
 }
 
-function key_text(key, parts, count, i, part, text) {
+function key_text(key, parts, count, i, part, text, minus) {
   gsub(/\\/, "", key)
-  count = split(key, parts, "-")
+
+  # A trailing "-" is the minus key itself, not a modifier separator.
+  minus = key ~ /(^|-)-$/
+  if (minus) key = substr(key, 1, length(key) - 1)
+
+  count = key == "" ? 0 : split(key, parts, "-")
   text = ""
 
   for (i = 1; i <= count; i++) {
     part = key_part_text(parts[i], i < count, count)
     text = text (text == "" ? "" : " + ") part
   }
+
+  if (minus) text = text (text == "" ? "" : " + ") "-"
 
   return text
 }
@@ -92,6 +99,12 @@ function table_text(table) {
 
 $1 == "prefix" && NF == 2 { prefix = $2; next }
 $1 == "prefix2" && NF == 2 { prefix2 = $2; next }
+$1 == "mode-keys" && NF == 2 { copy_table = $2 == "vi" ? "copy-mode-vi" : "copy-mode"; next }
+
+# Only the copy mode table mode-keys selects is live, and mouse events are
+# not keys.
+$1 ~ /^copy-mode/ && $1 != copy_table { next }
+$2 ~ /Mouse|Wheel|Click/ { next }
 
 {
   if (!header_printed) {
