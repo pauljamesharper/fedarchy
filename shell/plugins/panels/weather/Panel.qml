@@ -126,6 +126,10 @@ Panel {
   // Shared hero/bar icon state, updated with each successful weather response.
   property string label: ""
 
+  // Weather glyphs sit in the Nerd Font PUA, where fallback can land on STIX
+  // Two Math's unrelated symbols, so the icons name the Nerd Font outright.
+  readonly property string iconFontFamily: "JetBrainsMono Nerd Font"
+
   // wttr's current conditions when available; open-meteo's (bundled with the
   // much faster daily forecast fetch) fill the hero while wttr is in flight.
   readonly property bool hasConfiguredCoordinates: !isNaN(parseFloat(String(configuredLocationState.latitude))) && !isNaN(parseFloat(String(configuredLocationState.longitude)))
@@ -537,7 +541,7 @@ Panel {
             anchors.verticalCenterOffset: 5
             text: root.label || "—"
             color: root.bar.foreground
-            font.family: root.bar.fontFamily
+            font.family: root.iconFontFamily
             // Decorative condition emoji; intentionally larger than the
             // Style.font.* scale's displayLarge (28).
             font.pixelSize: 64
@@ -822,7 +826,7 @@ Panel {
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.dayIcon(modelData)
                 color: root.bar.foreground
-                font.family: root.bar.fontFamily
+                font.family: root.iconFontFamily
                 font.pixelSize: Style.font.display
               }
 

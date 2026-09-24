@@ -72,6 +72,9 @@ BarWidget {
     slotSize: Style.bar.statusSlot + 16
     opticalSize: Style.bar.iconCanvas + 16
     fontSize: Style.bar.iconFont + 14
+    // Weather Icons live in the Nerd Font PUA; left to fallback, Qt draws
+    // STIX Two Math's unrelated glyphs at the same codepoints instead.
+    fontFamily: panelLoader.item ? panelLoader.item.iconFontFamily : Style.font.family
     // Tooltip suppressed because the panel is the detail view.
     tooltipText: ""
 
