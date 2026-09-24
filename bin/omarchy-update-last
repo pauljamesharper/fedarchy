@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# omarchy:summary=Show when an update source last updated, for the About screen
+# omarchy:args=<system|brew|flatpak|distrobox>
+# omarchy:hidden=true
+
+# The later of the daily timer's last run and any manual update each source
+# leaves a trace of, so an update run by hand counts too.
+
+when() {
+  local epoch=$1 age
+  ((epoch > 0)) || { echo "never"; return; }
+
+  age=$(($(date +%s) - epoch))
+  if ((age < 3600)); then
+    age="$((age / 60))m ago"
+  elif ((age < 86400)); then
+    age="$((age / 3600))h ago"
+  else
+    age="$((age / 86400))d ago"
+  fi
+  echo "$(date -d "@$epoch" '+%b %-d %H:%M') ($age)"
+}
+
+timer_epoch() {
+  local last
+  last=$(systemctl "$@" show -p LastTriggerUSec --value 2>/dev/null)
+  [[ -n $last ]] && date -d "$last" +%s 2>/dev/null || echo 0
+}
+
+mtime() {
+  stat -c %Y "$1" 2>/dev/null || echo 0
+}
+
+latest() {
+  local max=0 value
+  for value in "$@"; do
+    ((value > max)) && max=$value
+  done
+  echo "$max"
+}
+
+case "${1:-}" in
+system)
+  source "$OMARCHY_PATH/install/helpers/distro-secureblue.sh"
+  is_ostree || exec omarchy-version-pkgs
+
+  status=$(rpm-ostree status --json 2>/dev/null) || { echo "unavailable"; exit 0; }
+  booted=$(jq -r '.deployments[] | select(.booted) | "\(.version) \(.timestamp)"' <<<"$status")
+  staged=$(jq -r '.deployments[] | select(.staged) | .version' <<<"$status")
+  echo "${booted%% *}, $(when "${booted##* }")${staged:+ · $staged staged, reboot to apply}"
+  ;;
+brew)
+  when "$(latest "$(timer_epoch --user omarchy-update-brew.timer)" \
+    "$(mtime "${HOMEBREW_REPOSITORY:-/home/linuxbrew/.linuxbrew/Homebrew}/.git/FETCH_HEAD")")"
+  ;;
+flatpak)
+  when "$(latest "$(timer_epoch --user omarchy-update-flatpak.timer)" \
+    "$(mtime "$HOME/.local/share/flatpak/.changed")")"
+  ;;
+distrobox)
+  when "$(timer_epoch --user omarchy-update-distrobox.timer)"
+  ;;
+*)
+  echo "Usage: omarchy-update-last <system|brew|flatpak|distrobox>" >&2
+  exit 1
+  ;;
+esac
